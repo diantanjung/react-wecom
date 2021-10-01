@@ -3,6 +3,7 @@ import { useHistory, useParams } from "react-router-dom";
 import axiosInstance from "../helpers/axiosInstance";
 import isAuthenticated from "../utils/isAuthenticated";
 import Editor from "@monaco-editor/react";
+import Xterm from "../components/Xterm";
 
 
 export default function EditCode() {
@@ -117,6 +118,9 @@ export default function EditCode() {
                                 value={code.main_str}
                                 onChange={setMainValue}
                             />
+                        </div>
+                        <div className="mb-3">
+                            <Xterm />
                         </div>
                         <button disabled={progress} className="btn btn-primary btn-lg btn-block" type="submit" onClick={updateCode}>Edit</button>
                     </form>

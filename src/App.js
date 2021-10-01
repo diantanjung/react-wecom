@@ -8,6 +8,8 @@ import Home from './pages/Home';
 import Run from './pages/Run';
 import axiosInstance from "./helpers/axiosInstance";
 import EditCode from "./pages/EditCode";
+import Xterminal from "./pages/Xterminal";
+import OpenFile from "./pages/OpenFile";
 
 export default function App() {
 
@@ -48,6 +50,8 @@ export default function App() {
             <Route path="/register"><Register username={username} /></Route>
             <Route path="/run/:dir/:cmd" component={Run}></Route>
             <Route path="/editcode/:dir/:cmd" component={EditCode}></Route>
+            <Route path="/xterminal/:dir/:cmd" component={Xterminal}></Route>
+            <Route path="/openfile/:dir/:cmd/:file" component={OpenFile}></Route>
           </Switch>
         </div>
       </Router>
