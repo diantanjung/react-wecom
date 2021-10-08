@@ -32,7 +32,7 @@ export default function Nav(props) {
         );
     }
     return (
-        <nav className="navbar navbar-expand-md bg-white border-bottom box-shadow mb-4">
+        <nav className="navbar navbar-expand-md bg-white border-bottom box-shadow mb-2">
             <div className="container-fluid">
             <Link to="/" className="navbar-brand p-2 text-dark">
                 <h5 className="my-0 mr-md-auto font-weight-normal">Web Command</h5>

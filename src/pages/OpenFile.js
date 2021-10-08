@@ -64,35 +64,38 @@ export default function OpenFile() {
     }
 
     return (
-        <div>
-            {success && (
-                <div className="alert alert-success" role="alert">
-                    <h5 className="alert-heading">Success!</h5>
-                    Success edit code.
-                </div>
-            )}
-            {error !== "" && (
-                <div className="alert alert-danger" role="alert">
-                    <h5 className="alert-heading">Error!</h5>
-                    {error}
-                </div>
-            )}
-            <div className="row">
-                <div>
-                    <form>
+        <div className="container">
+            <h5>Edit File</h5>
+            <div>
+                {success && (
+                    <div className="alert alert-success" role="alert">
+                        <h5 className="alert-heading">Success!</h5>
+                        Success edit code.
+                    </div>
+                )}
+                {error !== "" && (
+                    <div className="alert alert-danger" role="alert">
+                        <h5 className="alert-heading">Error!</h5>
+                        {error}
+                    </div>
+                )}
+                <div className="row">
+                    <div>
+                        <form>
 
-                        <div className="mb-3">
-                            <label htmlFor="file">{file}</label>
-                            <Editor
-                                height="75vh"
-                                theme="vs-dark"
-                                defaultLanguage="go"
-                                value={code}
-                                onChange={setValue}
-                            />
-                        </div>
-                        <button disabled={progress} className="btn btn-primary btn-lg btn-block" type="submit" onClick={updateFile}>Edit</button>
-                    </form>
+                            <div className="mb-3">
+                                <label htmlFor="file">{file}</label>
+                                <Editor
+                                    height="75vh"
+                                    theme="vs-dark"
+                                    defaultLanguage="go"
+                                    value={code}
+                                    onChange={setValue}
+                                />
+                            </div>
+                            <button disabled={progress} className="btn btn-primary btn-lg btn-block" type="submit" onClick={updateFile}>Edit</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

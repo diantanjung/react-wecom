@@ -3,20 +3,22 @@ import axiosInstance from "../helpers/axiosInstance";
 import Xterm from "../components/Xterm";
 
 export default function Home(props) {
-  let home;
-  if (props.username === ''){
-    home = (
-      <div className="text-center">You are not loged in.</div>
-      );
-  }else{
-    home = (
-      <div>
-       <Xterm />
-      </div>
-    );
-  }
+  // let home;
+  // if (props.username === ''){
+  //   home = (
+  //     <div className="text-center">You are not loged in.</div>
+  //     );
+  // }else{
+  //   home = (
+  //     <div>
+  //      <Xterm />
+  //     </div>
+  //   );
+  // }
 
   return (
-    home
+      <div>
+        <Xterm username={props.username} />
+      </div>
   );
 }
