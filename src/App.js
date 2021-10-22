@@ -51,7 +51,7 @@ export default function App() {
             <Route path="/run/:dir/:cmd" component={Run}></Route>
             <Route path="/editcode/:dir/:cmd" component={EditCode}></Route>
             <Route path="/xterminal/:dir/:cmd" component={Xterminal}></Route>
-            <Route path="/editfile/:dir/:cmd/:file" component={OpenFile}></Route>
+            <Route path="/editfile" component={OpenFile}></Route>
           </Switch>
         </div>
       </Router>

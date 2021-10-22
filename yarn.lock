@@ -11927,6 +11927,11 @@
   "resolved" "https://registry.npmjs.org/xtend/-/xtend-4.0.2.tgz"
   "version" "4.0.2"
 
+"xterm-addon-attach@^0.6.0":
+  "integrity" "sha512-Mo8r3HTjI/EZfczVCwRU6jh438B4WLXxdFO86OB7bx0jGhwh2GdF4ifx/rP+OB+Cb2vmLhhVIZ00/7x3YSP3dg=="
+  "resolved" "https://registry.npmjs.org/xterm-addon-attach/-/xterm-addon-attach-0.6.0.tgz"
+  "version" "0.6.0"
+
 "xterm-addon-fit@^0.5.0":
   "integrity" "sha512-DsS9fqhXHacEmsPxBJZvfj2la30Iz9xk+UKjhQgnYNkrUIN5CYLbw7WEfz117c7+S86S/tpHPfvNxJsF5/G8wQ=="
   "resolved" "https://registry.npmjs.org/xterm-addon-fit/-/xterm-addon-fit-0.5.0.tgz"

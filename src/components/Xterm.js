@@ -12,6 +12,9 @@ const fitAddon = new FitAddon();
 let command = "";
 let commands;
 let login = false;
+let wsStatus = false;
+let textCat = "";
+var conn;
 
 export default class App extends React.Component {
     constructor(props) {
@@ -19,7 +22,7 @@ export default class App extends React.Component {
         this.state = {
             logs: "",
             username: "",
-            currentPath: "~"
+            currentPath: "/"
         };
     }
 
@@ -65,15 +68,54 @@ export default class App extends React.Component {
                 term.write("\r\n" + shellprompt);
                 command +=  ' ';
                 login = true;
+            }else if (wsStatus){
+                switch (e) {
+                    case '\u0003': // Ctrl+C
+                        term.write('^C');
+                        conn.send('^D');
+                        wsStatus = false;
+                        this.prompt();
+                        break;
+                    case '\u0004':
+                        conn.send('^D');
+                        wsStatus = false;
+                        command = '';
+                        break;
+                    case '\r': // Enter
+                        term.write("\r\n");
+                        conn.send(textCat);
+                        textCat = "";
+                        break;
+                    case '\u007F': // Backspace (DEL)
+                        if (term._core.buffer.x > 0) {
+                            term.write('\b \b');
+                            if (textCat.length > 0) {
+                                textCat = textCat.substr(0, textCat.length - 1);
+                            }
+                        }
+                        break;
+                    default: // Print all other characters for demo
+                        if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7B)) {
+                            textCat += e;
+                            term.write(e);
+                        }
+                }
             }else{
                 switch (e) {
                     case '\u0003': // Ctrl+C
                         term.write('^C');
                         this.prompt();
                         break;
+                    case '\u0004':
+                        term.write('^D');
+                        break;
+                    case '\u007E':
+                        term.write(e);
+                        break;
                     case '\r': // Enter
                         this.runCommand(term, command);
-                        command = '';
+                        if (command !== "login ")
+                            command = '';
                         break;
                     case '\u007F': // Backspace (DEL)
                         // Do not delete the prompt
@@ -97,7 +139,21 @@ export default class App extends React.Component {
 
         });
 
-        // this.prompt();
+        this.startWs("ws://"+ process.env.REACT_APP_BE_WS +"/ws");
+    }
+
+    startWs =  (websocketServerLocation) => {
+        var that = this;
+        conn = new WebSocket(websocketServerLocation);
+        conn.onmessage = function(evt) {
+            term.write(evt.data);
+            that.prompt();
+        };
+        conn.onclose = function(){
+            // Try to reconnect in 5 seconds
+            that.prompt();
+            setTimeout(function(){that.startWs(websocketServerLocation)}, 5000);
+        };
     }
 
     runCommand = (term, text) => {
@@ -106,6 +162,9 @@ export default class App extends React.Component {
             term.writeln('');
             if (command in commands) {
                 commands[command].f(text);
+                return;
+            }else{
+                this.doAction(command);
                 return;
             }
             term.writeln(`${command}: command not found`);
@@ -138,7 +197,6 @@ export default class App extends React.Component {
                 this.prompt();
             })
             .catch((err) => {
-                console.log(err.response.data);
                 if (err.response) {
                     term.writeln(err.response.data.error);
                 } else {
@@ -196,9 +254,9 @@ export default class App extends React.Component {
     };
 
     startLoginNow = () => {
+        command =  "login ";
         var shellprompt = "$ Please Login, username : ";
         term.write("\r\n" + shellprompt);
-        command =  "login ";
     }
 
     getUserAuth = () => {
@@ -211,7 +269,6 @@ export default class App extends React.Component {
                 this.prompt();
             })
             .catch((err) => {
-                console.log(err.message);
                 this.startLoginNow()
             });
     }
@@ -259,21 +316,37 @@ export default class App extends React.Component {
                 usage: "adduser",
                 description: 'Link to add user form.'
             },
-            build: {
+            // build: {
+            //     f: (exe) => {
+            //         this.doAction(exe);
+            //         // this.prompt();
+            //     },
+            //     usage: "build [package] [output] ",
+            //     description: 'Build Command.'
+            // },
+            // run: {
+            //     f: (exe) => {
+            //         this.doAction(exe);
+            //         // this.prompt();
+            //     },
+            //     usage: "run [command path]",
+            //     description: 'Run Command.'
+            // },
+            go: {
                 f: (exe) => {
                     this.doAction(exe);
                     // this.prompt();
                 },
-                usage: "build [package] [output] ",
-                description: 'Build Command.'
+                usage: "go [command] [args..] ",
+                description: 'Run Go Command.'
             },
-            run: {
+            cargo: {
                 f: (exe) => {
                     this.doAction(exe);
                     // this.prompt();
                 },
-                usage: "run [command path]",
-                description: 'Run Command.'
+                usage: "cargo [command] [args..] ",
+                description: 'Run Cargo Rust Command.'
             },
             clear: {
                 f: (exe) => {
@@ -320,8 +393,44 @@ export default class App extends React.Component {
                 f: (exe) => {
                     this.doAction(exe);
                 },
-                usage: "rm [file name]",
-                description: 'remove a directory/file'
+                usage: "rm [file]",
+                description: 'remove file'
+            },
+            rmdir: {
+                f: (exe) => {
+                    this.doAction(exe);
+                },
+                usage: "rmdir [args] [directory]",
+                description: 'remove directory'
+            },
+            pwd: {
+                f: (exe) => {
+                    this.doAction(exe);
+                },
+                usage: "pwd",
+                description: 'return working directory name'
+            },
+            cat: {
+                f: (exe) => {
+                    if (/cat >+ \S+$/i.test(exe)){
+                        if (!conn) {
+                            return false;
+                        }
+                        conn.send(this.state.username + "#" + this.state.currentPath + "#" + exe);
+                        wsStatus = true;
+                    }else{
+                        this.doAction(exe);
+                    }
+                },
+                usage: "cat [args] [file]",
+                description: 'Create and modify file'
+            },
+            touch: {
+                f: (exe) => {
+                    this.doAction(exe);
+                },
+                usage: "pwd",
+                description: 'return working directory name'
             }
         };
 

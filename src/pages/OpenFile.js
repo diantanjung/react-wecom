@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from 'react';
 import Editor from "@monaco-editor/react";
 import axiosInstance from "../helpers/axiosInstance";
-import {useParams} from "react-router-dom";
+import {useLocation} from "react-router-dom";
 
 export default function OpenFile() {
 
-    let { dir, cmd, file } = useParams();
+    // let {file } = useParams();
     const [code, setCode] = useState("");
 
     const [progress, setProgress] = useState(false);
@@ -14,11 +14,14 @@ export default function OpenFile() {
 
     const [field, setField] = useState("");
 
+    let location = useLocation();
+    let file = location.pathname.substring(10);
+
     useEffect(() => {
         (
             async () => {
                 axiosInstance()
-                    .get("/command/" + dir + "/" + cmd+ "/" + file)
+                    .post("/open", JSON.stringify({"path_str" : file}))
                     .then((res) => {
                         setCode(res.data.file_str);
                     })
@@ -42,11 +45,12 @@ export default function OpenFile() {
         setProgress(true);
 
         let val = {
+            "path_str" : file,
             "file_str" : field
         }
 
         axiosInstance()
-            .patch("/command/" + dir + "/" + cmd + "/" + file, JSON.stringify(val))
+            .patch("/open", JSON.stringify(val))
             .then((res) => {
                 setSuccess(true);
                 setError("");
