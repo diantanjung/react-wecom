@@ -36,11 +36,38 @@ export default class App extends React.Component {
             // rendererType: "dom" // default is canvas
         });
 
+        term.currentLine = "";
+        term.history = [];
+        term.historyCursor = -1;
+        term.pos = () => term._core.buffer.x - term._promptRawText().length - 1;
+        term._promptRawText = () => `${this.state.username}:${this.state.currentPath} $`;
+
         //Styling
         term.setOption("theme", {
             background: "#000000",
             foreground: "#FFFFFF"
         });
+
+        term.prompt = (prefix = "\r\n", suffix = " ") => {
+            var shellprompt;
+            if(this.state.username){
+                shellprompt = this.state.username + ":" + this.state.currentPath + " $ ";
+            }else{
+                shellprompt = "$ ";
+            }
+            term.write(prefix + shellprompt);
+        };
+
+        term.setCurrentLine = (newLine) => {
+            term.currentLine = newLine;
+            command = newLine;
+            // term.prompt();
+            term.write(newLine);
+        }
+
+        term.stylePrint = (text) => {
+            term.writeln(text);
+        };
 
         // Load Fit Addon
         term.loadAddon(fitAddon);
@@ -62,11 +89,13 @@ export default class App extends React.Component {
                     login = false;
                     this.runCommand(term, command);
                     command = '';
+                    term.currentLine = '';
                 }
             }else if(e === '\r' && command.trim().split(' ')[0] == "login"){
                 var shellprompt = "$ please input password :  ";
                 term.write("\r\n" + shellprompt);
                 command +=  ' ';
+                term.currentLine += ' ';
                 login = true;
             }else if (wsStatus){
                 switch (e) {
@@ -80,6 +109,7 @@ export default class App extends React.Component {
                         conn.send('^D');
                         wsStatus = false;
                         command = '';
+                        term.currentLine = '';
                         break;
                     case '\r': // Enter
                         term.write("\r\n");
@@ -114,8 +144,12 @@ export default class App extends React.Component {
                         break;
                     case '\r': // Enter
                         this.runCommand(term, command);
-                        if (command !== "login ")
+                        if (command !== "login "){
+                            term.history.push(command);
                             command = '';
+                            term.currentLine = '';
+                        }
+
                         break;
                     case '\u007F': // Backspace (DEL)
                         // Do not delete the prompt
@@ -126,12 +160,64 @@ export default class App extends React.Component {
                             term.write('\b \b');
                             if (command.length > 0) {
                                 command = command.substr(0, command.length - 1);
+                                term.currentLine = command;
                             }
+                        }
+                        break;
+                    // case '\033[A': // up
+                    case '\u001b[A': // up
+                        var h = [... term.history].reverse();
+                        if (term.historyCursor < h.length - 1) {
+                            term.historyCursor += 1;
+                            term.setCurrentLine(h[term.historyCursor], false);
+                        }
+                        break;
+                    // case '\033[B': // down
+                    case '\u001b[B': // down
+                        var h = [... term.history].reverse();
+                        if (term.historyCursor > 0) {
+                            term.historyCursor -= 1;
+                            term.setCurrentLine(h[term.historyCursor], false);
+                        } else {
+                            term.clearCurrentLine(true);
+                        }
+                        break;
+                    case '\t': // tab
+                        const cmd = term.currentLine.split(" ")[0];
+                        console.log(cmd);
+                        const rest = term.currentLine.slice(cmd.length).trim();
+                        const autocompleteCmds = Object.keys(commands).filter((c) => c.startsWith(cmd));
+                        var autocompleteArgs;
+
+                        // detect what to autocomplete
+                        if (autocompleteCmds && autocompleteCmds.length > 1) {
+                            const oldLine = term.currentLine;
+                            term.stylePrint(`\r\n${autocompleteCmds.sort().join("   ")}`);
+                            term.prompt();
+                            term.setCurrentLine(oldLine);
+                        }
+
+                        // do the autocompleting
+                        if (autocompleteArgs && autocompleteArgs.length > 1) {
+                            const oldLine = term.currentLine;
+                            term.writeln(`\r\n${autocompleteArgs.join("   ")}`);
+                            term.prompt();
+                            term.setCurrentLine(oldLine);
+                        } else if (commands[cmd] && autocompleteArgs && autocompleteArgs.length > 0) {
+                            term.prompt();
+                            term.setCurrentLine(`${cmd} ${autocompleteArgs[0]}`);
+                        } else if (commands[cmd] && autocompleteArgs && autocompleteArgs.length == 0) {
+                            term.prompt();
+                            term.setCurrentLine(`${cmd} ${rest}`);
+                        } else if (autocompleteCmds && autocompleteCmds.length == 1) {
+                            term.prompt();
+                            term.setCurrentLine(`${autocompleteCmds[0]} `);
                         }
                         break;
                     default: // Print all other characters for demo
                         if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7B)) {
                             command += e;
+                            term.currentLine += e;
                             term.write(e);
                         }
                 }
