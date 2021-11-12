@@ -10,6 +10,8 @@ import axiosInstance from "./helpers/axiosInstance";
 import EditCode from "./pages/EditCode";
 import Xterminal from "./pages/Xterminal";
 import OpenFile from "./pages/OpenFile";
+import OpenDir from "./pages/OpenDir";
+import RunFile from "./pages/RunFile";
 
 export default function App() {
 
@@ -48,10 +50,12 @@ export default function App() {
             <Route path="/" exact><Home username={username} /> </Route>
             <Route path="/login" component={Login}></Route>
             <Route path="/adduser"><Register username={username} /></Route>
-            <Route path="/run/:dir/:cmd" component={Run}></Route>
+            <Route path="/exe/:dir/:cmd" component={Run}></Route>
             <Route path="/editcode/:dir/:cmd" component={EditCode}></Route>
             <Route path="/xterminal/:dir/:cmd" component={Xterminal}></Route>
             <Route path="/editfile" component={OpenFile}></Route>
+            <Route path="/opendir" component={OpenDir}></Route>
+            <Route path="/run" component={RunFile}></Route>
           </Switch>
         </div>
       </Router>

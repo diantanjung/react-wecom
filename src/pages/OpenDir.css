@@ -1,0 +1,22 @@
+.hx_color-icon-directory {
+    color: #54aeff;
+}
+.margin-top {
+    margin-top: 30px;
+}
+
+a {
+    color: #212529;
+}
+
+a:link {
+    text-decoration: none;
+}
+
+a:visited {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}

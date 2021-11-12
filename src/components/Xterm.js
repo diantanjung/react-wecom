@@ -58,11 +58,25 @@ export default class App extends React.Component {
             term.write(prefix + shellprompt);
         };
 
-        term.setCurrentLine = (newLine) => {
-            term.currentLine = newLine;
+        term.clearCurrentLine = (goToEndofHistory = false) => {
+            term.write('\x1b[2K\r');
+            term.prompt("", " ");
+            term.currentLine = "";
+            if (goToEndofHistory) {
+                term.historyCursor = -1;
+                term.scrollToBottom();
+            }
+        };
+
+        term.setCurrentLine = (newLine, preserveCursor = false) => {
             command = newLine;
-            // term.prompt();
+            const length = term.currentLine.length;
+            term.clearCurrentLine();
+            term.currentLine = newLine;
             term.write(newLine);
+            if (preserveCursor) {
+                term.write('\x1b[D'.repeat(length - term.pos()));
+            }
         }
 
         term.stylePrint = (text) => {
@@ -182,12 +196,22 @@ export default class App extends React.Component {
                             term.clearCurrentLine(true);
                         }
                         break;
+                    // case '\033[C': // right
+                    case '\u001b[C': // right
+                        if (term.pos() < term.currentLine.length) {
+                            term.write('\x1b[C');
+                        }
+                        break;
+                    // case '\033[D': // left
+                    case '\u001b[D': // left
+                        if (term.pos() > 0) {
+                            term.write('\x1b[D');
+                        }
+                        break;
                     case '\t': // tab
                         const cmd = term.currentLine.split(" ")[0];
-                        console.log(cmd);
                         const rest = term.currentLine.slice(cmd.length).trim();
                         const autocompleteCmds = Object.keys(commands).filter((c) => c.startsWith(cmd));
-                        var autocompleteArgs;
 
                         // detect what to autocomplete
                         if (autocompleteCmds && autocompleteCmds.length > 1) {
@@ -195,24 +219,46 @@ export default class App extends React.Component {
                             term.stylePrint(`\r\n${autocompleteCmds.sort().join("   ")}`);
                             term.prompt();
                             term.setCurrentLine(oldLine);
+                        }else if (autocompleteCmds && autocompleteCmds.length == 1 && autocompleteCmds[0] !== cmd) {
+                            term.setCurrentLine(`${autocompleteCmds[0]} `);
+                        }else{
+                            axiosInstance()
+                                .post("/autocomplete", JSON.stringify({"term": term.currentLine, "path" : this.state.currentPath}))
+                                .then((res) => {
+                                    if(res.data){
+                                        const oldLine = term.currentLine;
+                                        let irisan = "";
+                                        const datalen = res.data.colored.length;
+                                        if(datalen > 1){
+                                            term.stylePrint(`\r\n${res.data.colored.sort().join("   ")}`);
+
+                                            let minval = res.data.pure.reduce(function(a, b) {
+                                                return a.length <= b.length ? a : b;
+                                            });
+
+                                            const restLen = res.data.rest.length;
+
+                                            let filterArr;
+                                            for(let i= 1; i <= minval.length; i++){
+                                                let potongan = minval.substring(0, i);
+                                                filterArr = res.data.pure.filter((c) => c.startsWith(potongan));
+                                                if (filterArr.length == datalen){
+                                                    irisan = potongan
+                                                }
+                                            }
+
+                                            term.prompt();
+                                            term.setCurrentLine(oldLine + irisan.substring(restLen));
+                                        }else if(datalen == 1){
+                                            term.setCurrentLine(res.data.colored[0]);
+                                        }
+                                    }
+                                })
+                                .catch((err) => {
+                                    //do nothing
+                                });
                         }
 
-                        // do the autocompleting
-                        if (autocompleteArgs && autocompleteArgs.length > 1) {
-                            const oldLine = term.currentLine;
-                            term.writeln(`\r\n${autocompleteArgs.join("   ")}`);
-                            term.prompt();
-                            term.setCurrentLine(oldLine);
-                        } else if (commands[cmd] && autocompleteArgs && autocompleteArgs.length > 0) {
-                            term.prompt();
-                            term.setCurrentLine(`${cmd} ${autocompleteArgs[0]}`);
-                        } else if (commands[cmd] && autocompleteArgs && autocompleteArgs.length == 0) {
-                            term.prompt();
-                            term.setCurrentLine(`${cmd} ${rest}`);
-                        } else if (autocompleteCmds && autocompleteCmds.length == 1) {
-                            term.prompt();
-                            term.setCurrentLine(`${autocompleteCmds[0]} `);
-                        }
                         break;
                     default: // Print all other characters for demo
                         if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7B)) {
@@ -283,11 +329,14 @@ export default class App extends React.Component {
                 this.prompt();
             })
             .catch((err) => {
-                if (err.response) {
-                    term.writeln(err.response.data.error);
-                } else {
-                    term.writeln(err.message);
+                if (err){
+                    if (err.response) {
+                        term.writeln(err.response.data.error);
+                    } else if (err.message) {
+                        term.writeln(err.message);
+                    }
                 }
+
                 this.prompt();
             });
     };
@@ -382,13 +431,13 @@ export default class App extends React.Component {
                 usage: "ls",
                 description: 'Prints list command'
             },
-            edit: {
+            open: {
                 f: (exe) => {
                     this.doAction(exe);
                     // this.prompt();
                 },
-                usage: "edit [file path]",
-                description: 'Edit source code.'
+                usage: "open [file path]",
+                description: 'Open file.'
             },
             adduser: {
                 f: (exe) => {
@@ -402,22 +451,6 @@ export default class App extends React.Component {
                 usage: "adduser",
                 description: 'Link to add user form.'
             },
-            // build: {
-            //     f: (exe) => {
-            //         this.doAction(exe);
-            //         // this.prompt();
-            //     },
-            //     usage: "build [package] [output] ",
-            //     description: 'Build Command.'
-            // },
-            // run: {
-            //     f: (exe) => {
-            //         this.doAction(exe);
-            //         // this.prompt();
-            //     },
-            //     usage: "run [command path]",
-            //     description: 'Run Command.'
-            // },
             go: {
                 f: (exe) => {
                     this.doAction(exe);
