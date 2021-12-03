@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import axiosInstance from "../helpers/axiosInstance";
+import React from 'react';
 import Xterm from "../components/Xterm";
+import {useLocation} from "react-router-dom";
 
 export default function Home(props) {
   // let home;
@@ -16,9 +16,12 @@ export default function Home(props) {
   //   );
   // }
 
-  return (
+    let location = useLocation();
+    // let file = location.pathname.substring(10);
+
+    return (
       <div>
         <Xterm username={props.username} />
       </div>
-  );
+    );
 }

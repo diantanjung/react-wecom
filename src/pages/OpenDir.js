@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from 'react';
-import Editor from "@monaco-editor/react";
 import axiosInstance from "../helpers/axiosInstance";
 import {useLocation} from "react-router-dom";
 import { Table, Tabs, Tab } from 'react-bootstrap';

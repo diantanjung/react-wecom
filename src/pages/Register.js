@@ -1,8 +1,6 @@
 import React from 'react';
 import { useState } from "react";
-import {Link, useHistory} from "react-router-dom";
 import axiosInstance from "../helpers/axiosInstance";
-import isAuthenticated from "../utils/isAuthenticated";
 
 
 export default function Register(props) {

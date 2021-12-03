@@ -2,9 +2,6 @@ import React from "react";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import "./xterm.css";
-import { Resizable } from "re-resizable";
-import ResizeObserver from "react-resize-observer";
-import c from "ansi-colors";
 import axiosInstance from "../helpers/axiosInstance";
 
 let term;
@@ -22,7 +19,7 @@ export default class App extends React.Component {
         this.state = {
             logs: "",
             username: "",
-            currentPath: "/"
+            currentPath: "~"
         };
     }
 
@@ -40,7 +37,13 @@ export default class App extends React.Component {
         term.history = [];
         term.historyCursor = -1;
         term.pos = () => term._core.buffer.x - term._promptRawText().length - 1;
-        term._promptRawText = () => `${this.state.username}:${this.state.currentPath} $`;
+        term._promptRawText = () => {
+            if (this.state.username !== "") {
+                return `${this.state.username}:${this.state.currentPath} $`;
+            }else{
+                return "$ Please Login, username : ";
+            }
+        }
 
         //Styling
         term.setOption("theme", {
@@ -53,8 +56,9 @@ export default class App extends React.Component {
             if(this.state.username){
                 shellprompt = this.state.username + ":" + this.state.currentPath + " $ ";
             }else{
-                shellprompt = "$ ";
+                shellprompt = "$ Please Login, username : ";
             }
+
             term.write(prefix + shellprompt);
         };
 
@@ -69,10 +73,10 @@ export default class App extends React.Component {
         };
 
         term.setCurrentLine = (newLine, preserveCursor = false) => {
-            command = newLine;
             const length = term.currentLine.length;
             term.clearCurrentLine();
             term.currentLine = newLine;
+            command = newLine;
             term.write(newLine);
             if (preserveCursor) {
                 term.write('\x1b[D'.repeat(length - term.pos()));
@@ -91,6 +95,7 @@ export default class App extends React.Component {
 
         term.write("Welcome to the Command Web terminal.\n");
         term.write("Write your command below, try running `help`.");
+        term.focus();
 
         // Make the terminal's size and geometry fit the size of #terminal-container
         fitAddon.fit();
@@ -98,6 +103,7 @@ export default class App extends React.Component {
         term.onData(e => {
             if(login){
                 command += e;
+                term.currentLine += e;
                 //doaction();
                 if (e === '\r'){
                     login = false;
@@ -105,7 +111,7 @@ export default class App extends React.Component {
                     command = '';
                     term.currentLine = '';
                 }
-            }else if(e === '\r' && command.trim().split(' ')[0] == "login"){
+            }else if(e === '\r' && command.trim().split(' ')[0] === "login"){
                 var shellprompt = "$ please input password :  ";
                 term.write("\r\n" + shellprompt);
                 command +=  ' ';
@@ -137,9 +143,10 @@ export default class App extends React.Component {
                                 textCat = textCat.substr(0, textCat.length - 1);
                             }
                         }
+
                         break;
                     default: // Print all other characters for demo
-                        if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7B)) {
+                        if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7E)) {
                             textCat += e;
                             term.write(e);
                         }
@@ -153,13 +160,10 @@ export default class App extends React.Component {
                     case '\u0004':
                         term.write('^D');
                         break;
-                    case '\u007E':
-                        term.write(e);
-                        break;
                     case '\r': // Enter
-                        this.runCommand(term, command);
+                        this.runCommand(term, term.currentLine);
                         if (command !== "login "){
-                            term.history.push(command);
+                            term.history.push(term.currentLine);
                             command = '';
                             term.currentLine = '';
                         }
@@ -173,25 +177,28 @@ export default class App extends React.Component {
                         if (term._core.buffer.x > noDelete) {
                             term.write('\b \b');
                             if (command.length > 0) {
-                                command = command.substr(0, command.length - 1);
+                                const newLine = command.slice(0, term._core.buffer.x - noDelete - 1) + command.slice(term._core.buffer.x - noDelete);
+                                command = newLine;
+
+                                // command = command.substr(term._core.buffer.x, command.length - 1);
                                 term.currentLine = command;
                             }
                         }
                         break;
                     // case '\033[A': // up
                     case '\u001b[A': // up
-                        var h = [... term.history].reverse();
-                        if (term.historyCursor < h.length - 1) {
+                        let hup = [...term.history].reverse();
+                        if (term.historyCursor < hup.length - 1) {
                             term.historyCursor += 1;
-                            term.setCurrentLine(h[term.historyCursor], false);
+                            term.setCurrentLine(hup[term.historyCursor], false);
                         }
                         break;
                     // case '\033[B': // down
                     case '\u001b[B': // down
-                        var h = [... term.history].reverse();
+                        let hdown = [...term.history].reverse();
                         if (term.historyCursor > 0) {
                             term.historyCursor -= 1;
-                            term.setCurrentLine(h[term.historyCursor], false);
+                            term.setCurrentLine(hdown[term.historyCursor], false);
                         } else {
                             term.clearCurrentLine(true);
                         }
@@ -219,8 +226,10 @@ export default class App extends React.Component {
                             term.stylePrint(`\r\n${autocompleteCmds.sort().join("   ")}`);
                             term.prompt();
                             term.setCurrentLine(oldLine);
-                        }else if (autocompleteCmds && autocompleteCmds.length == 1 && autocompleteCmds[0] !== cmd) {
+                        }else if (autocompleteCmds && autocompleteCmds.length === 1 && autocompleteCmds[0] !== cmd) {
                             term.setCurrentLine(`${autocompleteCmds[0]} `);
+                        }else if(rest.endsWith("..") || rest.endsWith("~")){
+                            term.setCurrentLine(term.currentLine + "/");
                         }else{
                             axiosInstance()
                                 .post("/autocomplete", JSON.stringify({"term": term.currentLine, "path" : this.state.currentPath}))
@@ -230,7 +239,7 @@ export default class App extends React.Component {
                                         let irisan = "";
                                         const datalen = res.data.colored.length;
                                         if(datalen > 1){
-                                            term.stylePrint(`\r\n${res.data.colored.sort().join("   ")}`);
+                                            term.stylePrint(`\r\n${res.data.colored.sort().map(item => item.replace("/\u001B[0m", "\u001B[0m")).join("   ")}`);
 
                                             let minval = res.data.pure.reduce(function(a, b) {
                                                 return a.length <= b.length ? a : b;
@@ -242,15 +251,15 @@ export default class App extends React.Component {
                                             for(let i= 1; i <= minval.length; i++){
                                                 let potongan = minval.substring(0, i);
                                                 filterArr = res.data.pure.filter((c) => c.startsWith(potongan));
-                                                if (filterArr.length == datalen){
+                                                if (filterArr.length === datalen){
                                                     irisan = potongan
                                                 }
                                             }
 
                                             term.prompt();
                                             term.setCurrentLine(oldLine + irisan.substring(restLen));
-                                        }else if(datalen == 1){
-                                            term.setCurrentLine(res.data.colored[0]);
+                                        }else if(datalen === 1){
+                                            term.setCurrentLine(res.data.pure[0]);
                                         }
                                     }
                                 })
@@ -261,10 +270,15 @@ export default class App extends React.Component {
 
                         break;
                     default: // Print all other characters for demo
-                        if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7B)) {
-                            command += e;
-                            term.currentLine += e;
-                            term.write(e);
+                        if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7E)) {
+                            if (command.trim().split(' ')[0] === "login"){
+                                command += e;
+                                term.currentLine += e;
+                                term.write(e);
+                            }else{
+                                const newLine = `${term.currentLine.slice(0, term.pos())}${e}${term.currentLine.slice(term.pos())}`;
+                                term.setCurrentLine(newLine, true);
+                            }
                         }
                 }
             }
@@ -299,7 +313,6 @@ export default class App extends React.Component {
                 this.doAction(command);
                 return;
             }
-            term.writeln(`${command}: command not found`);
         }
         this.prompt();
     }
@@ -331,7 +344,14 @@ export default class App extends React.Component {
             .catch((err) => {
                 if (err){
                     if (err.response) {
-                        term.writeln(err.response.data.error);
+                        if (err.response.data){
+                            if (err.response.data.error){
+                                term.writeln(err.response.data.error);
+                            }
+                        }else{
+                            term.writeln("Error " + err.response.status + " : " + err.response.statusText);
+                        }
+
                     } else if (err.message) {
                         term.writeln(err.message);
                     }
@@ -379,10 +399,19 @@ export default class App extends React.Component {
                 }
             })
             .catch((err) => {
-                if (err.response) {
-                    term.writeln(err.response.data.error);
-                } else {
-                    term.writeln(err.message);
+                if (err){
+                    if (err.response) {
+                        if (err.response.data){
+                            if (err.response.data.error){
+                                term.writeln(err.response.data.error);
+                            }
+                        }else{
+                            term.writeln("Error " + err.response.status + " : " + err.response.statusText);
+                        }
+
+                    } else if (err.message) {
+                        term.writeln(err.message);
+                    }
                 }
                 this.startLoginNow();
             });
@@ -390,6 +419,7 @@ export default class App extends React.Component {
 
     startLoginNow = () => {
         command =  "login ";
+        term.currentLine =  "login ";
         var shellprompt = "$ Please Login, username : ";
         term.write("\r\n" + shellprompt);
     }
@@ -431,6 +461,14 @@ export default class App extends React.Component {
                 usage: "ls",
                 description: 'Prints list command'
             },
+            ln: {
+                f: (exe) => {
+                    this.doAction(exe);
+                    // this.prompt();
+                },
+                usage: "ln",
+                description: 'Create link file'
+            },
             open: {
                 f: (exe) => {
                     this.doAction(exe);
@@ -441,7 +479,7 @@ export default class App extends React.Component {
             },
             adduser: {
                 f: (exe) => {
-                    if (this.state.username == "admin"){
+                    if (this.state.username === "admin"){
                         this.doAction(exe);
                     }else{
                         term.writeln("Error user permission.");
