@@ -567,6 +567,27 @@ export default class App extends React.Component {
                 usage: "pwd",
                 description: 'return working directory name'
             },
+            cp: {
+                f: (exe) => {
+                    this.doAction(exe);
+                },
+                usage: "cp [args] source destination",
+                description: 'copy file/directory'
+            },
+            mv: {
+                f: (exe) => {
+                    this.doAction(exe);
+                },
+                usage: "mv [args] source destination",
+                description: 'move file/directory'
+            },
+            git: {
+                f: (exe) => {
+                    this.doAction(exe);
+                },
+                usage: "git [args] [command]",
+                description: 'git version control command'
+            },
             cat: {
                 f: (exe) => {
                     if (/cat >+ \S+$/i.test(exe)){
