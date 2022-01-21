@@ -4,6 +4,7 @@ import axiosInstance from "../helpers/axiosInstance";
 import Editor from "@monaco-editor/react";
 import {Tab, Table, Tabs} from "react-bootstrap";
 import ListTable from "./ListTable";
+import './OpenDir.css';
 
 export default function Open() {
     let { username } = useParams();
