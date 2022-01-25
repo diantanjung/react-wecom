@@ -12,7 +12,7 @@ import isAuthenticated from "../utils/isAuthenticated";
 
 const term = new Terminal({
     convertEol: true,
-    fontFamily: `Abel, monospace, MesloLGS NF, Hack Nerd Font, Hack`,
+    fontFamily: `Abel, monospace, MesloLGS NF`,
     fontSize: 15,
     fontWeight: 400
     // rendererType: "dom" // default is canvas
