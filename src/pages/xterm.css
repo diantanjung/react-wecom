@@ -34,15 +34,6 @@
 /**
  *  Default styles for xterm.js
  */
-
- @font-face {
-    font-family: 'MesloLGS NF';
-    src: url('../assets/MesloLGS\ NF\ Regular.ttf') format('truetype'),
-    url('../assets/MesloLGS\ NF\ Italic.ttf') format('truetype'),
-    url('../assets/MesloLGS\ NF\ Bold\ Italic.ttf') format('truetype'),
-    url('../assets/MesloLGS\ NF\ Bold.ttf') format('truetype');
-  }
-
 .xterm {
     position: relative;
     user-select: none;
