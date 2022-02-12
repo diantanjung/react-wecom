@@ -25,6 +25,9 @@ export default function Home() {
     const [username] = useState(localStorage.username);
 
     useEffect(() => {
+        if (!isAuthenticated()) {
+            window.location = "/login";
+        }
 
         // Open the terminal in #terminal-container
         term.open(document.getElementById("xterm"));
@@ -35,78 +38,80 @@ export default function Home() {
         term.loadAddon(fitAddon);
         setTimeout(function () { fitAddon.fit() });
         term.focus();
-        if (!isAuthenticated()) {
-            startLogin();
-        } else {
-            startWs(username);
-        }
+        startWs(username);
+        // if (!isAuthenticated()) {
+        //     startLogin();
+        // } else {
+        //     startWs(username);
+        // }
     }, []);
 
-    const doLogin = (username, password) => {
-        axiosInstance()
-            .post("/users/login", JSON.stringify({ "username": username, password: password }))
-            .then((res) => {
-                if (res.data.access_token) {
-                    localStorage.access_token = res.data.access_token;
-                    localStorage.username = res.data.user.username;
-                    startWs(res.data.user.username);
-                } else {
-                    term.writeln(res.data.message);
-                }
-            })
-            .catch((err) => {
-                if (err) {
-                    if (err.response) {
-                        if (err.response.data) {
-                            if (err.response.data.error) {
-                                term.writeln(err.response.data.error);
-                            }
-                        } else {
-                            term.writeln("Error " + err.response.status + " : " + err.response.statusText);
-                        }
+    // const doLogin = (username, password) => {
+    //     axiosInstance()
+    //         .post("/users/login", JSON.stringify({ "username": username, password: password }))
+    //         .then((res) => {
+    //             if (res.data.access_token) {
+    //                 localStorage.access_token = res.data.access_token;
+    //                 localStorage.username = res.data.user.username;
+    //                 startWs(res.data.user.username);
+    //             } else {
+    //                 term.writeln(res.data.message);
+    //             }
+    //         })
+    //         .catch((err) => {
+    //             if (err) {
+    //                 if (err.response) {
+    //                     if (err.response.data) {
+    //                         if (err.response.data.error) {
+    //                             term.writeln(err.response.data.error);
+    //                         }
+    //                     } else {
+    //                         term.writeln("Error " + err.response.status + " : " + err.response.statusText);
+    //                     }
 
-                    } else if (err.message) {
-                        term.writeln(err.message);
-                    }
-                }
-                startLogin();
-            });
-    }
+    //                 } else if (err.message) {
+    //                     term.writeln(err.message);
+    //                 }
+    //             }
+    //             startLogin();
+    //         });
+    // }
 
-    const startLogin = () => {
-        // Read a single line from the user
-        let loginStatus = true;
-        localEcho.read("Login, username : ")
-            .then(username => {
-                let password = "";
-                term.write("Login, password : ")
-                term.onData(e => {
-                    if (loginStatus) {
-                        if (e === '\r') {
-                            term.write('\r\n');
-                            doLogin(username, password);
-                            password = "";
-                            loginStatus = false;
-                        } else if (e === '\u007F') {
-                            if (password.length > 0) {
-                                password = password.substr(0, password.length - 1);
-                            }
-                        } else {
-                            if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7E)) {
-                                password += e;
-                            }
-                        }
-                    }
+    // const startLogin = () => {
+    //     // Read a single line from the user
+    //     let loginStatus = true;
+    //     localEcho.read("Login, username : ")
+    //         .then(username => {
+    //             let password = "";
+    //             term.write("Login, password : ")
+    //             term.onData(e => {
+    //                 if (loginStatus) {
+    //                     if (e === '\r') {
+    //                         term.write('\r\n');
+    //                         doLogin(username, password);
+    //                         password = "";
+    //                         loginStatus = false;
+    //                     } else if (e === '\u007F') {
+    //                         if (password.length > 0) {
+    //                             password = password.substr(0, password.length - 1);
+    //                         }
+    //                     } else {
+    //                         if (e >= String.fromCharCode(0x20) && e <= String.fromCharCode(0x7E)) {
+    //                             password += e;
+    //                         }
+    //                     }
+    //                 }
 
-                });
-            })
-            .catch(error => alert(`Error reading: ${error}`));
-    }
+    //             });
+    //         })
+    //         .catch(error => alert(`Error reading: ${error}`));
+    // }
 
     const logout = () => {
         localStorage.removeItem("access_token");
         localStorage.removeItem("username");
-        startLogin();
+        window.location = "/login";
+        // startLogin();
     }
 
     // const doAction = (exe) => {
