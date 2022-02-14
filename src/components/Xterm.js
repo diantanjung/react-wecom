@@ -285,7 +285,7 @@ export default class App extends React.Component {
 
         });
 
-        this.startWs("ws://"+ process.env.REACT_APP_BE_WS +"/ws");
+        this.startWs(process.env.REACT_APP_BE_WS);
     }
 
     startWs =  (websocketServerLocation) => {

@@ -149,7 +149,7 @@ export default function Home() {
     // };
 
     const startWs = (username) => {
-        const url = `ws://${process.env.REACT_APP_BE_WS}/ws2/${username}`;
+        const url = `${process.env.REACT_APP_BE_WS2}/${username}`;
 
         const ws = new WebSocket(url);
         const attachAddon = new AttachAddon(ws);
