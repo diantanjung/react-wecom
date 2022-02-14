@@ -99,7 +99,7 @@ export default function Login(props) {
         <button disabled={progress} className="btn btn-primary btn-lg btn-block" type="submit">Sign In</button>
       </form>
       </div>
-      <div style={{"margin-top":'15px'}}>
+      <div>
       <hr/>
       <GoogleLogin
         clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
