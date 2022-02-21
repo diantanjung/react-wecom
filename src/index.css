@@ -1,3 +1,15 @@
+@font-face {
+  font-family: 'MesloLGS NF';
+  src: url('./assets/MesloLGS\ NF\ Regular.ttf') format('truetype'),
+    url('./assets/MesloLGS\ NF\ Italic.ttf') format('truetype'),
+    url('./assets/MesloLGS\ NF\ Bold\ Italic.ttf') format('truetype'),
+    url('./assets/MesloLGS\ NF\ Bold.ttf') format('truetype');
+}
+
+.meslo {
+  font-family: 'MesloLGS NF';
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
