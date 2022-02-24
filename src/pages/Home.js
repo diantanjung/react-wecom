@@ -173,7 +173,14 @@ export default function Home() {
             term.loadAddon(attachAddon);
             term._initialized = true;
             term.focus();
-            setTimeout(function () { fitAddon.fit() });
+            setTimeout(function () { 
+                fitAddon.fit();
+                var dimensions = fitAddon.proposeDimensions();
+                var size = JSON.stringify({ cols: dimensions.cols, rows: dimensions.rows });
+                var send = new TextEncoder().encode("\x01" + size);
+                console.log('resizing to', size);
+                ws.send(send);
+            });
             term.onResize(function (event) {
                 var rows = event.rows;
                 var cols = event.cols;
