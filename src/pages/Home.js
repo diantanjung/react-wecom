@@ -206,6 +206,8 @@ export default function Home() {
 
                 if(event.includes(" ")){
                     command = event.trim().split(' ')[0]
+                }else{
+                    command = event;
                 }
 
                 console.log(command);
