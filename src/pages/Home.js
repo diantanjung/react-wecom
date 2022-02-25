@@ -165,8 +165,9 @@ export default function Home() {
 
         ws.onclose = function (event) {
             console.log(event);
-            // term.write('\r\n\nconnection has been terminated from the server-side (hit refresh to restart)\n')
-            logout();
+            console.log("onclose bosss");
+            term.write('\r\n\nconnection has been terminated from the server-side (hit refresh to restart)\n')
+            // logout();
         };
 
         ws.onopen = function () {
@@ -218,6 +219,9 @@ export default function Home() {
                                 window.open("@" + username + "/" + curPath + "/" + filePath, "_blank");
                             }
                         }
+                        break;
+                    case 'quit':
+                        logout();
                         break;
                     default:
                         break;
