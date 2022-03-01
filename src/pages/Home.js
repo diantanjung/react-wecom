@@ -164,8 +164,6 @@ export default function Home() {
         term.loadAddon(serializeAddon);
 
         ws.onclose = function (event) {
-            console.log(event);
-            console.log("onclose bosss");
             term.write('\r\n\nconnection has been terminated from the server-side (hit refresh to restart)\n')
             // logout();
         };
