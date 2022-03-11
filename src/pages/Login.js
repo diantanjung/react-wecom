@@ -4,6 +4,7 @@ import { useState } from "react";
 // import { useHistory } from "react-router-dom";
 import axiosInstance from "../helpers/axiosInstance";
 import GoogleLogin from 'react-google-login';
+import "./Login.css";
 
 export default function Login(props) {
   const [field, setField] = useState({});
@@ -54,10 +55,10 @@ export default function Login(props) {
     console.log(result);
   };
 
-  const handleLogin = async (googleData) => {
+  window.handleLogin = async (googleData) => {
     axiosInstance()
       .post("/users/login-google", JSON.stringify({
-        id_token: googleData.tokenId,
+        credential: googleData.credential,
       }))
       .then((res) => {
         localStorage.access_token = res.data.access_token;
@@ -78,38 +79,64 @@ export default function Login(props) {
   };
 
   return (
-    <div className="form-signin text-center">
-      <h1 className="h3 mb-3 fw-normal">Please Sign In</h1>
-      {error !== "" && (
-        <div className="alert alert-danger" role="alert">
-          <h5 className="alert-heading">Error!</h5>
-          {error}
+    <div className="row no-gutter no-margin">
+      <div className="col-md-6 d-none d-md-flex bg-image"></div>
+
+
+      <div className="col-md-6 bg-light">
+        <div className="login d-flex align-items-center py-5">
+
+          <div className="container">
+            <div className="row">
+              <div className="col-lg-10 col-xl-6 mx-auto">
+                <h3 className="display-4">Login</h3>
+                <p className="text-muted mb-4">Please insert your Username and Password.</p>
+                {error !== "" && (
+                  <div className="alert alert-danger" role="alert">
+                    <h5 className="alert-heading">Error!</h5>
+                    {error}
+                  </div>
+                )}
+                <form onSubmit={doLogin} >
+                  <div className="form-group mb-3">
+                    <input id="username" type="text" name='username' placeholder="Username" required=""
+                      className="form-control rounded-pill border-0 shadow-sm px-4" onChange={setValue} />
+                  </div>
+                  <div className="form-group mb-3">
+                    <input id="password" type="password" name='password' placeholder="Password" required=""
+                      className="form-control rounded-pill border-0 shadow-sm px-4 text-primary" onChange={setValue} />
+                  </div>
+                  <button type="submit" disabled={progress}
+                    className="btn btn-primary btn-block text-uppercase mb-2 rounded-pill shadow-sm">Login</button>
+                </form>
+                <div className='col-lg-12 col-xl-12 text-center'>
+                  <span> or </span>
+                </div>
+                <br />
+                <div id="g_id_onload"
+                  data-client_id={process.env.REACT_APP_GOOGLE_CLIENT_ID}
+                  // data-login_uri="http://localhost:9000/users/login-google"
+                  data-callback='handleLogin'
+                  data-auto_prompt="false" >
+                </div>
+                <div className="g_id_signin"
+                  data-type="standard"
+                  data-size="large"
+                  data-theme="outline"
+                  data-text="sign_in_with"
+                  data-shape="circle"
+                  data-logo_alignment="right"
+                  data-width="350">
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
-      )}
-      <div>
-      <form onSubmit={doLogin} >
-        <div className="form-floating">
-          <input type="text" className="form-control" name="username" id="username" placeholder="Username" required onChange={setValue} />
-          <label htmlFor="floatingInput">Username</label>
-        </div>
-        <div className="form-floating">
-          <input type="password" className="form-control" name="password" id="password" placeholder="Password" required onChange={setValue} />
-          <label htmlFor="floatingPassword">Password</label>
-        </div>
-        <button disabled={progress} className="btn btn-primary btn-lg btn-block" type="submit">Sign In</button>
-      </form>
       </div>
-      <div>
-      <hr/>
-      <GoogleLogin
-        clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
-        buttonText="Sign In with Google"
-        onSuccess={handleLogin}
-        onFailure={handleFailure}
-        cookiePolicy={'single_host_origin'}
-      ></GoogleLogin>
-      </div>
-      
+
     </div>
+
   );
 }
+

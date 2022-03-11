@@ -35,9 +35,8 @@
  *  Default styles for xterm.js
  */
 
- 
-
-.xterm {
+ .xterm {
+    font-feature-settings: "liga" 0;
     position: relative;
     user-select: none;
     -ms-user-select: none;
@@ -169,8 +168,4 @@
 
 .xterm-underline {
     text-decoration: underline;
-}
-
-.xterm-strikethrough {
-    text-decoration: line-through;
 }
