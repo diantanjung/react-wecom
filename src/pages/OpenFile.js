@@ -87,7 +87,7 @@ export default function OpenFile() {
                     <div>
                         <form>
 
-                            <div className="mb-3">
+                            <div>
                                 <label htmlFor="file">{file}</label>
                                 <Editor
                                     height="75vh"

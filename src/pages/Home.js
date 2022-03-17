@@ -210,24 +210,24 @@ export default function Home() {
                     command = event;
                 }
 
-                console.log(command);
-                switch (command) {
-                    case 'open':
-                        const filePath = event.trim().split(' ')[1];
-                        if(filePath != ""){
-                            if(filePath.charAt(0) === "/"){
-                                window.open("@" + username + "/" + filePath, "_blank");
-                            }else{
-                                window.open("@" + username + "/" + curPath + "/" + filePath, "_blank");
-                            }
-                        }
-                        break;
-                    case 'quit':
-                        logout();
-                        break;
-                    default:
-                        break;
-                }
+                // console.log(command);
+                // switch (command) {
+                //     case 'open':
+                //         const filePath = event.trim().split(' ')[1];
+                //         if(filePath != ""){
+                //             if(filePath.charAt(0) === "/"){
+                //                 window.open("@" + username + "/" + filePath, "_blank");
+                //             }else{
+                //                 window.open("@" + username + "/" + curPath + "/" + filePath, "_blank");
+                //             }
+                //         }
+                //         break;
+                //     case 'quit':
+                //         logout();
+                //         break;
+                //     default:
+                //         break;
+                // }
             });
             window.onresize = function () {
                 fitAddon.fit();

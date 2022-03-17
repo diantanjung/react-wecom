@@ -2,7 +2,11 @@
     color: #54aeff;
 }
 .margin-top {
-    margin-top: 30px;
+    margin-top: 25px;
+}
+
+.btn-width {
+    width: 200px;
 }
 
 a {
