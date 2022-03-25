@@ -15,13 +15,13 @@ const term = new Terminal({
     fontFamily: `Abel, monospace, MesloLGS NF`,
     fontSize: 15,
     fontWeight: 400,
-    height:`20px`,
-    margin:`20px`
+    height: `20px`,
+    margin: `20px`
     // rendererType: "dom" // default is canvas
 });
 const localEcho = new LocalEchoController();
 const fitAddon = new FitAddon();
-       
+
 
 export default function Home() {
     const [username] = useState(localStorage.username);
@@ -156,7 +156,21 @@ export default function Home() {
         const ws = new WebSocket(url);
         const attachAddon = new AttachAddon(ws);
 
-        const webLinksAddon = new WebLinksAddon();
+        // const webLinksAddon = new WebLinksAddon();
+        const webLinksAddon = new WebLinksAddon(
+            (event, url) => {
+                // console.log(url);
+                window.open(url);
+            },
+            {
+                validationCallback: (url, callback) => {
+                    callback(true);
+                    if(url.startsWith("http://localhost:3000/")){
+                        window.open(url);
+                    }
+                }
+            }
+        );
         term.loadAddon(webLinksAddon);
 
         const unicode11Addon = new Unicode11Addon();
@@ -174,7 +188,7 @@ export default function Home() {
             term.loadAddon(attachAddon);
             term._initialized = true;
             term.focus();
-            setTimeout(function () { 
+            setTimeout(function () {
                 fitAddon.fit();
                 var dimensions = fitAddon.proposeDimensions();
                 var size = JSON.stringify({ cols: dimensions.cols, rows: dimensions.rows });
@@ -191,47 +205,58 @@ export default function Home() {
                 ws.send(send);
             });
             term.onTitleChange(function (event) {
-                // console.log("evt : " + event);
+                console.log("evt : " + event);
                 let curPath = "/home/" + username;
                 let command = "";
 
-                if(event.includes(":")){
+                if (event.includes(":")) {
                     let term = event.trim().split(':');
                     let len = term.length;
-                    curPath = term[len-1];
-                    if (curPath === "~"){
+                    curPath = term[len - 1];
+                    if (curPath === "~") {
                         curPath = "/home/" + username;
                     }
                 }
 
-                if(event.includes(" ")){
+                if (event.includes(" ")) {
                     command = event.trim().split(' ')[0]
-                }else{
+                } else {
                     command = event;
                 }
 
-                // console.log(command);
-                // switch (command) {
-                //     case 'open':
-                //         const filePath = event.trim().split(' ')[1];
-                //         if(filePath != ""){
-                //             if(filePath.charAt(0) === "/"){
-                //                 window.open("@" + username + "/" + filePath, "_blank");
-                //             }else{
-                //                 window.open("@" + username + "/" + curPath + "/" + filePath, "_blank");
-                //             }
-                //         }
-                //         break;
-                //     case 'quit':
-                //         logout();
-                //         break;
-                //     default:
-                //         break;
-                // }
+                console.log(command);
+                switch (command) {
+                    // case 'open':
+                    //     const filePath = event.trim().split(' ')[1];
+                    //     if(filePath != ""){
+                    //         if(filePath.charAt(0) === "/"){
+                    //             window.open("@" + username + "/" + filePath, "_blank");
+                    //         }else{
+                    //             window.open("@" + username + "/" + curPath + "/" + filePath, "_blank");
+                    //         }
+                    //     }
+                    //     break;
+                    case 'quit':
+                        logout();
+                        break;
+                    default:
+                        break;
+                }
             });
             window.onresize = function () {
                 fitAddon.fit();
             };
+        };
+
+        ws.onmessage = function (event) {
+            var msg = event.data
+            // console.log("onmessage : "+ event.data);
+            if (msg.length > 1) {
+                if (msg.startsWith("failed to start tty:")) {
+                    logout();
+                }
+            }
+
         };
     }
 
