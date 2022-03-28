@@ -165,7 +165,7 @@ export default function Home() {
             {
                 validationCallback: (url, callback) => {
                     callback(true);
-                    if(url.startsWith("http://localhost:3000/")){
+                    if(url.startsWith("https://bilang.io") || url.startsWith("http://localhost")){
                         window.open(url);
                     }
                 }
