@@ -55,24 +55,24 @@ export default function Login(props) {
     console.log(result);
   };
 
-  window.handleLogin = async (googleData) => {
-    axiosInstance()
-      .post("/users/login-google", JSON.stringify({
-        credential: googleData.credential,
-      }))
-      .then((res) => {
-        localStorage.access_token = res.data.access_token;
-        localStorage.username = res.data.user.username;
-        setField({});
-        setError("");
-        setRedirect(true);
-        // history.push("/");
-      })
-      .catch((err) => {
-        setError(err.message);
-      });
+  // window.handleLogin = async (googleData) => {
+  //   axiosInstance()
+  //     .post("/users/login-google", JSON.stringify({
+  //       credential: googleData.credential,
+  //     }))
+  //     .then((res) => {
+  //       localStorage.access_token = res.data.access_token;
+  //       localStorage.username = res.data.user.username;
+  //       setField({});
+  //       setError("");
+  //       setRedirect(true);
+  //       // history.push("/");
+  //     })
+  //     .catch((err) => {
+  //       setError(err.message);
+  //     });
 
-  };
+  // };
 
   const handleLogout = () => {
     localStorage.removeItem('loginData');
