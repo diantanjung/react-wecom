@@ -2,13 +2,15 @@ import axiosInstance from "../helpers/axiosInstance";
 import React, { useState, useEffect } from 'react';
 import Editor from "@monaco-editor/react";
 
-const EditorSection = ({filepath, username}) => {
+const EditorSection = ({ filepath, username }) => {
     const [code, setCode] = useState("");
 
     useEffect(() => {
         (
             async () => {
-                openDirFile();
+                if (filepath != '') {
+                    openDirFile();
+                }
             }
         )();
     }, []);
@@ -29,17 +31,17 @@ const EditorSection = ({filepath, username}) => {
     }
 
     return (
-            <Editor
-                height="100%"
-                theme="vs-dark"
-                defaultLanguage="go"
-                value={code}
-                options={{
-                    minimap: {
-                      enabled: false,
-                    },
-              }}
-            />
+        <Editor
+            height="100%"
+            theme="vs-dark"
+            defaultLanguage="go"
+            value={code}
+            options={{
+                minimap: {
+                    enabled: false,
+                },
+            }}
+        />
     )
 }
 
