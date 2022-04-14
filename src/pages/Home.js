@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
 import Menu from '../components/Menu'
-import TopSection from '../components/TopSection'
-import BottomSection from '../components/BottomSection'
 import axiosInstance from "../helpers/axiosInstance";
-import isAuthenticated from "../utils/isAuthenticated";
+import RightSection from '../components/RightSection';
+import LeftSection from '../components/LeftSection';
 
 const Home = () => {
-    const [activeMenu, setActiveMenu] = useState('open');
+    const [activeMenu, setActiveMenu] = useState('files');
     const [username, setUsername] = useState(localStorage.username || '');
 
     window.handleLogin = async (googleData) => {
@@ -43,15 +42,21 @@ const Home = () => {
                 </div>
             } */}
 
-            <div id="content">
-                <TopSection
-                    activeMenu={activeMenu}
-                    username={username}
-                />
-                <BottomSection
-                    activeMenu={activeMenu}
-                    username={username}
-                />
+            <div id="content" >
+                <div className='container-fluid'>
+                <div className="row">
+                    <LeftSection
+                        activeMenu={activeMenu}
+                        username={username}
+                        setActiveMenu={setActiveMenu}
+                    />
+                    <RightSection
+                        activeMenu={activeMenu}
+                        username={username}
+                    />
+                </div>
+                </div>
+                
             </div>
             <Menu
                 activeMenu={activeMenu}

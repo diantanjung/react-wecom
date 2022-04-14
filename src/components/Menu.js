@@ -16,7 +16,7 @@ const Menu = ({ activeMenu, setActiveMenu }) => {
                 {
                     isAuthenticated() ?
                         <li >
-                            <a onClick={() => logout()}><span className="fa-solid fa-reply"></span> Logout</a>
+                            <a onClick={() => logout()}><span className="fa fa-reply"></span> Logout</a>
                         </li>
                         :
                         <li style={{ paddingLeft: '25px', paddingBottom: '15px' }} >

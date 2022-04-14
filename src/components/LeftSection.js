@@ -1,15 +1,17 @@
-import React from 'react'
-import EditorSection from './EditorSection'
-import FilesSection from './FilesSection'
+import React, {useState} from 'react'
+import EditorSection from './EditorSection';
+import FilesSection from './FilesSection';
 import HelpSection from './HelpSection';
 
-const TopSection = ({ activeMenu, username }) => {
+const LeftSection = ({ activeMenu, username, setActiveMenu }) => {
+    const [filepath, setFilepath] = useState('');
     let activeSection, heightCls, bgCls;
-    console.log("username top : " + username)
     switch (activeMenu) {
         case 'files':
             activeSection = <FilesSection
                 username={username}
+                setFilepath={setFilepath}
+                setActiveMenu={setActiveMenu}
             />;
             heightCls = 'full';
             bgCls = 'bg-white';
@@ -17,6 +19,7 @@ const TopSection = ({ activeMenu, username }) => {
         case 'open':
             activeSection = <EditorSection
                 username={username}
+                filepath={filepath}
             />;
             heightCls = 'full';
             bgCls = 'bg-gelap';
@@ -24,6 +27,7 @@ const TopSection = ({ activeMenu, username }) => {
         case 'terminal':
             activeSection = <EditorSection
                 username={username}
+                filepath={filepath}
             />;
             heightCls = 'setengah';
             bgCls = 'bg-gelap';
@@ -36,6 +40,7 @@ const TopSection = ({ activeMenu, username }) => {
         default:
             activeSection = <EditorSection
                 username={username}
+                filepath={filepath}
             />;
             heightCls = 'full';
             bgCls = 'bg-gelap';
@@ -48,4 +53,4 @@ const TopSection = ({ activeMenu, username }) => {
     )
 }
 
-export default TopSection
+export default LeftSection

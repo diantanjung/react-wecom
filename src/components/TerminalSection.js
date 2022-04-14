@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Terminal } from "xterm";
-import LocalEchoController from 'local-echo';
 import { WebLinksAddon } from 'xterm-addon-web-links';
 import { AttachAddon } from 'xterm-addon-attach';
-import { FitAddon } from 'xterm-addon-fit';
 import { Unicode11Addon } from 'xterm-addon-unicode11';
 import { SerializeAddon } from "xterm-addon-serialize";
 import "./xterm.css";
-import axiosInstance from "../helpers/axiosInstance";
 import isAuthenticated from "../utils/isAuthenticated";
 
 // const term = new Terminal({
@@ -89,14 +85,14 @@ const TerminalSection = ({term, localEcho, fitAddon}) => {
             term.loadAddon(attachAddon);
             term._initialized = true;
             term.focus();
-            setTimeout(function () {
-                fitAddon.fit();
-                var dimensions = fitAddon.proposeDimensions();
-                var size = JSON.stringify({ cols: dimensions.cols, rows: dimensions.rows });
-                var send = new TextEncoder().encode("\x01" + size);
-                console.log('resizing to', size);
-                ws.send(send);
-            });
+            // setTimeout(function () {
+            //     fitAddon.fit();
+            //     var dimensions = fitAddon.proposeDimensions();
+            //     var size = JSON.stringify({ cols: dimensions.cols, rows: dimensions.rows });
+            //     var send = new TextEncoder().encode("\x01" + size);
+            //     console.log('resizing to', size);
+            //     ws.send(send);
+            // });
             term.onResize(function (event) {
                 var rows = event.rows;
                 var cols = event.cols;

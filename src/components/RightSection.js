@@ -3,9 +3,8 @@ import TerminalSection from './TerminalSection'
 import { Terminal } from "xterm";
 import LocalEchoController from 'local-echo';
 import { FitAddon } from 'xterm-addon-fit';
-import HelpSection from './HelpSection';
 
-const BottomSection = ({ activeMenu, username }) => {
+const RightSection = ({ activeMenu, username }) => {
     let activeSection, heightCls;
     const term = new Terminal({
         convertEol: true,
@@ -51,4 +50,4 @@ const BottomSection = ({ activeMenu, username }) => {
     )
 }
 
-export default BottomSection
+export default RightSection

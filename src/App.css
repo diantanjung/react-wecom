@@ -7,8 +7,6 @@ html {
   }
 }
 
-.container {
-}
 
 .pricing-header {
   max-width: 700px;
@@ -33,18 +31,21 @@ html {
 }
 
 .setengah {
-  height: 50vh;
-  width: auto;
+  height: 100vh;
+  width: 50%;
+  padding: 10px;
+  overflow: hidden;
 }
 
 .full {
   height: 100vh;
-  width: auto;
+  width: 100%;
+  padding: 10px;
+  overflow: hidden;
 }
 
 .hilang {
-  height: 0;
-  width: 0;
+  display: none;
 }
 
 /*!
@@ -8247,7 +8248,8 @@ h1, h2, h3, h4, h5,
   margin: 40px 0; }
 
 .wrapper {
-  width: 100%; }
+  width: 100%;
+}
 
 #sidebar {
   min-width: 270px;
