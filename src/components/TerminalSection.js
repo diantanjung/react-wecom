@@ -35,10 +35,11 @@ const TerminalSection = ({term, localEcho, fitAddon}) => {
         setTimeout(function () { fitAddon.fit() });
         term.focus();
         if (!isAuthenticated()) {
-            term.write('\r\n\nPlease Login!\n');
-            return false;
+            startWs("guest");
+        }else{
+            startWs(username);
         }
-        startWs(username);
+        
     }, []);
 
 
@@ -98,11 +99,9 @@ const TerminalSection = ({term, localEcho, fitAddon}) => {
                 var cols = event.cols;
                 var size = JSON.stringify({ cols: cols, rows: rows });
                 var send = new TextEncoder().encode("\x01" + size);
-                console.log('resizing to', size);
                 ws.send(send);
             });
             term.onTitleChange(function (event) {
-                console.log("evt : " + event);
                 let curPath = "/home/" + username;
                 let command = "";
 
@@ -120,8 +119,6 @@ const TerminalSection = ({term, localEcho, fitAddon}) => {
                 } else {
                     command = event;
                 }
-
-                console.log(command);
                 switch (command) {
                     case 'quit':
                         logout();

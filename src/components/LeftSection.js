@@ -20,6 +20,7 @@ const LeftSection = ({ activeMenu, username, setActiveMenu }) => {
             activeSection = <EditorSection
                 username={username}
                 filepath={filepath}
+                activeMenu={activeMenu}
             />;
             heightCls = 'full';
             bgCls = 'bg-gelap';
@@ -28,6 +29,7 @@ const LeftSection = ({ activeMenu, username, setActiveMenu }) => {
             activeSection = <EditorSection
                 username={username}
                 filepath={filepath}
+                activeMenu={activeMenu}
             />;
             heightCls = 'setengah';
             bgCls = 'bg-gelap';

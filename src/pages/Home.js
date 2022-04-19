@@ -6,7 +6,7 @@ import LeftSection from '../components/LeftSection';
 
 const Home = () => {
     const [activeMenu, setActiveMenu] = useState('files');
-    const [username, setUsername] = useState(localStorage.username || '');
+    const [username, setUsername] = useState(localStorage.username || 'guest');
 
     window.handleLogin = async (googleData) => {
         axiosInstance()

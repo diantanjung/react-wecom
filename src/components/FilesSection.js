@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from "../helpers/axiosInstance";
 import { Tab, Table, Tabs } from "react-bootstrap";
 import ListTable from "./ListTable";
+import GlistTable from "./GlistTable";
 import './OpenDir.css';
+import isAuthenticated from '../utils/isAuthenticated';
 
 const FilesSection = ({ username, setFilepath, setActiveMenu }) => {
   const [error, setError] = useState("");
@@ -15,7 +17,11 @@ const FilesSection = ({ username, setFilepath, setActiveMenu }) => {
   useEffect(() => {
     (
       async () => {
-        openDirFile();
+        if (isAuthenticated()) {
+          openDirFile();
+        } else {
+          gopenDirFile();
+        }
       }
     )();
   }, []);
@@ -30,6 +36,27 @@ const FilesSection = ({ username, setFilepath, setActiveMenu }) => {
   const openDirFile = () => {
     axiosInstance()
       .post("/opendirfile", JSON.stringify({ "path_str": file, "username": username }))
+      .then((res) => {
+        if (res.data.is_dir) {
+          setData(res.data.dir_list);
+        }
+      })
+      .catch((err) => {
+        if (err.response) {
+          setError(err.response.data.error);
+          if (err.response.data.error == 'token has expired' || err.response.data.error == 'token is invalid') {
+            logout();
+          }
+        } else {
+          setError(err.message);
+        }
+
+      });
+  }
+
+  const gopenDirFile = () => {
+    axiosInstance()
+      .post("/gopendirfile", JSON.stringify({ "path_str": file, "username": "guest" }))
       .then((res) => {
         if (res.data.is_dir) {
           setData(res.data.dir_list);
@@ -78,7 +105,7 @@ const FilesSection = ({ username, setFilepath, setActiveMenu }) => {
                       setActiveMenu('open');
                     }}
                       className="text-center"
-                      style={{ cursor: 'pointer', color : '#1e1e1e' }}
+                      style={{ cursor: 'pointer', color: '#1e1e1e' }}
                     >
                       {item.filename}
 
@@ -126,7 +153,12 @@ const FilesSection = ({ username, setFilepath, setActiveMenu }) => {
             </Tab>
             <Tab eventKey="list" title={<span><i className="fa fa-bars"></i> List</span>}>
               {/*<ListContent />*/}
-              <ListTable file={file} />
+              {
+                isAuthenticated() ?
+                <ListTable file={file} />
+                :
+                <GlistTable file={file} />
+              }
             </Tab>
           </Tabs>
         </div>
