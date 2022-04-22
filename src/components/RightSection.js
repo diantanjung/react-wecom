@@ -9,7 +9,7 @@ const RightSection = ({ activeMenu, username }) => {
     const term = new Terminal({
         convertEol: true,
         fontFamily: `Abel, monospace, MesloLGS NF`,
-        fontSize: 15,
+        fontSize: 13,
         fontWeight: 400,
         height: `20px`,
         margin: `20px`,

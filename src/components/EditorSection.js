@@ -7,13 +7,13 @@ const EditorSection = ({ filepath, username, activeMenu }) => {
     const [code, setCode] = useState("");
     const [activeMinimap, setActiveMinimap] = useState(true);
 
-    // useEffect(() => {
-    //     if(activeMenu == "open"){
-    //         setActiveMinimap(true);
-    //     }else{
-    //         setActiveMinimap(false);
-    //     }
-    // }, [activeMenu]);
+    useEffect(() => {
+        if(activeMenu == "open"){
+            setActiveMinimap(true);
+        }else{
+            setActiveMinimap(false);
+        }
+    }, [activeMenu]);
 
     useEffect(() => {
         (
