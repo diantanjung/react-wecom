@@ -19,7 +19,7 @@ import isAuthenticated from "../utils/isAuthenticated";
 // const fitAddon = new FitAddon();
 
 
-const TerminalSection = ({term, localEcho, fitAddon}) => {
+const TerminalSection = ({term, localEcho, fitAddon, activeMenu}) => {
     const [username] = useState(localStorage.username);
 
     useEffect(() => {
@@ -86,14 +86,14 @@ const TerminalSection = ({term, localEcho, fitAddon}) => {
             term.loadAddon(attachAddon);
             term._initialized = true;
             term.focus();
-            // setTimeout(function () {
-            //     fitAddon.fit();
-            //     var dimensions = fitAddon.proposeDimensions();
-            //     var size = JSON.stringify({ cols: dimensions.cols, rows: dimensions.rows });
-            //     var send = new TextEncoder().encode("\x01" + size);
-            //     console.log('resizing to', size);
-            //     ws.send(send);
-            // });
+            setTimeout(function () {
+                fitAddon.fit();
+                var dimensions = fitAddon.proposeDimensions();
+                var size = JSON.stringify({ cols: dimensions.cols, rows: dimensions.rows });
+                var send = new TextEncoder().encode("\x01" + size);
+                console.log('resizing to', size);
+                ws.send(send);
+            });
             term.onResize(function (event) {
                 var rows = event.rows;
                 var cols = event.cols;
@@ -128,7 +128,10 @@ const TerminalSection = ({term, localEcho, fitAddon}) => {
                 }
             });
             window.onresize = function () {
-                fitAddon.fit();
+                var dimensions = fitAddon.proposeDimensions();
+                if(!(isNaN(dimensions.cols) || isNaN(dimensions.rows))){
+                    fitAddon.fit();
+                }
             };
         };
 

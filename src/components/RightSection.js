@@ -35,6 +35,7 @@ const RightSection = ({ activeMenu, username }) => {
                 localEcho={localEcho}
                 fitAddon={fitAddon}
                 username={username}
+                activeMenu={activeMenu}
             />
             break;
         case 'help':
