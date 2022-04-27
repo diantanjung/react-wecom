@@ -49,6 +49,9 @@ const Menu = ({ activeMenu, setActiveMenu }) => {
                 <li className={activeMenu == 'terminal' ? "active" : ""}>
                     <a onClick={() => setActiveMenu('terminal')}><span className="fa fa-terminal"></span> Terminal</a>
                 </li>
+                <li className={activeMenu == 'output' ? "active" : ""}>
+                    <a onClick={() => setActiveMenu('output')}><span className="fa fa-align-left"></span> Output</a>
+                </li>
                 <li className={activeMenu == 'help' ? "active" : ""}>
                     <a onClick={() => setActiveMenu('help')}><span className="fa fa-info"></span> Help</a>
                 </li>

@@ -1,16 +1,19 @@
-import React, {useState} from 'react'
+import React, { useState } from 'react'
 import EditorSection from './EditorSection';
 import FilesSection from './FilesSection';
 import HelpSection from './HelpSection';
+import OutputSection from './OutputSection';
 
 const LeftSection = ({ activeMenu, username, setActiveMenu }) => {
     const [filepath, setFilepath] = useState('');
+    const [runpath, setRunpath] = useState('');
     let activeSection, heightCls, bgCls;
     switch (activeMenu) {
         case 'files':
             activeSection = <FilesSection
                 username={username}
                 setFilepath={setFilepath}
+                setRunpath={setRunpath}
                 setActiveMenu={setActiveMenu}
             />;
             heightCls = 'full';
@@ -33,6 +36,14 @@ const LeftSection = ({ activeMenu, username, setActiveMenu }) => {
             />;
             heightCls = 'setengah';
             bgCls = 'bg-gelap';
+            break;
+        case 'output':
+            activeSection = <OutputSection
+            username={username}
+            runpath={runpath}
+            />;
+            heightCls = 'full';
+            bgCls = 'bg-white';
             break;
         case 'help':
             activeSection = <HelpSection />;

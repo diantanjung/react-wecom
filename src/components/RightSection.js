@@ -38,6 +38,9 @@ const RightSection = ({ activeMenu, username }) => {
                 activeMenu={activeMenu}
             />
             break;
+        case 'output':
+            heightCls = 'hilang';
+            break;
         case 'help':
             heightCls = 'hilang';
             break;

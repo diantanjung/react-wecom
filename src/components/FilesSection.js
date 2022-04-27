@@ -6,7 +6,7 @@ import GlistTable from "./GlistTable";
 import './OpenDir.css';
 import isAuthenticated from '../utils/isAuthenticated';
 
-const FilesSection = ({ username, setFilepath, setActiveMenu }) => {
+const FilesSection = ({ username, setFilepath, setActiveMenu, setRunpath }) => {
   const [error, setError] = useState("");
 
   let file = '/home/' + username;
@@ -101,8 +101,13 @@ const FilesSection = ({ username, setFilepath, setActiveMenu }) => {
                     </svg>
                     <br />
                     <a onClick={() => {
-                      setFilepath(dirLink + "/" + item.filename);
-                      setActiveMenu('open');
+                      if (item.filename.indexOf('.') == -1) {
+                        setRunpath(dirLink + "/" + item.filename);
+                        setActiveMenu('output');
+                      } else {
+                        setFilepath(dirLink + "/" + item.filename);
+                        setActiveMenu('open');
+                      }
                     }}
                       className="text-center"
                       style={{ cursor: 'pointer', color: '#1e1e1e' }}
@@ -155,9 +160,9 @@ const FilesSection = ({ username, setFilepath, setActiveMenu }) => {
               {/*<ListContent />*/}
               {
                 isAuthenticated() ?
-                <ListTable file={file} />
-                :
-                <GlistTable file={file} />
+                  <ListTable file={file} />
+                  :
+                  <GlistTable file={file} />
               }
             </Tab>
           </Tabs>
