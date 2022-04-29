@@ -41,19 +41,22 @@ const Menu = ({ activeMenu, setActiveMenu }) => {
 
 
                 <li className={activeMenu == 'files' ? "active" : ""}>
-                    <a onClick={() => setActiveMenu('files')}><span className="fa fa-folder"></span> Files</a>
+                    <a onClick={() => setActiveMenu('files')}><span className="fa fa-folder"></span>Files</a>
                 </li>
                 <li className={activeMenu == 'open' ? "active" : ""}>
-                    <a onClick={() => setActiveMenu('open')}><span className="fa fa-file"></span> Open</a>
+                    <a onClick={() => setActiveMenu('open')}><span className="fa fa-file"></span>Open</a>
                 </li>
                 <li className={activeMenu == 'terminal' ? "active" : ""}>
-                    <a onClick={() => setActiveMenu('terminal')}><span className="fa fa-terminal"></span> Terminal</a>
+                    <a onClick={() => setActiveMenu('terminal')}><span className="fa fa-terminal"></span>Terminal</a>
+                </li>
+                <li className={activeMenu == 'run' ? "active" : ""}>
+                    <a onClick={() => setActiveMenu('run')}><span className="fa fa-play"></span>Run</a>
                 </li>
                 <li className={activeMenu == 'output' ? "active" : ""}>
-                    <a onClick={() => setActiveMenu('output')}><span className="fa fa-align-left"></span> Output</a>
+                    <a onClick={() => setActiveMenu('output')}><span className="fa fa-align-left"></span>Output</a>
                 </li>
                 <li className={activeMenu == 'help' ? "active" : ""}>
-                    <a onClick={() => setActiveMenu('help')}><span className="fa fa-info"></span> Help</a>
+                    <a onClick={() => setActiveMenu('help')}><span className="fa fa-info"></span>Help</a>
                 </li>
             </ul>
 

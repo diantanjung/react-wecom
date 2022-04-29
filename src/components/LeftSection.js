@@ -4,8 +4,7 @@ import FilesSection from './FilesSection';
 import HelpSection from './HelpSection';
 import OutputSection from './OutputSection';
 
-const LeftSection = ({ activeMenu, username, setActiveMenu }) => {
-    const [filepath, setFilepath] = useState('');
+const LeftSection = ({ activeMenu, username, setActiveMenu, filepath, setFilepath, setDirpath }) => {
     const [runpath, setRunpath] = useState('');
     let activeSection, heightCls, bgCls;
     switch (activeMenu) {
@@ -14,6 +13,7 @@ const LeftSection = ({ activeMenu, username, setActiveMenu }) => {
                 username={username}
                 setFilepath={setFilepath}
                 setRunpath={setRunpath}
+                setDirpath={setDirpath}
                 setActiveMenu={setActiveMenu}
             />;
             heightCls = 'full';
@@ -37,10 +37,19 @@ const LeftSection = ({ activeMenu, username, setActiveMenu }) => {
             heightCls = 'setengah';
             bgCls = 'bg-gelap';
             break;
+        case 'run':
+            activeSection = <EditorSection
+                username={username}
+                filepath={filepath}
+                activeMenu={activeMenu}
+            />;
+            heightCls = 'setengah';
+            bgCls = 'bg-gelap';
+            break;
         case 'output':
             activeSection = <OutputSection
-            username={username}
-            runpath={runpath}
+                username={username}
+                runpath={runpath}
             />;
             heightCls = 'full';
             bgCls = 'bg-white';

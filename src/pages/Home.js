@@ -7,6 +7,8 @@ import LeftSection from '../components/LeftSection';
 const Home = () => {
     const [activeMenu, setActiveMenu] = useState('files');
     const [username, setUsername] = useState(localStorage.username || 'guest');
+    const [filepath, setFilepath] = useState('');
+    const [dirpath, setDirpath] = useState('');
 
     window.handleLogin = async (googleData) => {
         axiosInstance()
@@ -49,10 +51,15 @@ const Home = () => {
                         activeMenu={activeMenu}
                         username={username}
                         setActiveMenu={setActiveMenu}
+                        filepath={filepath}
+                        setFilepath={setFilepath}
+                        setDirpath={setDirpath}
                     />
                     <RightSection
                         activeMenu={activeMenu}
                         username={username}
+                        filepath={filepath}
+                        dirpath={dirpath}
                     />
                 </div>
                 </div>

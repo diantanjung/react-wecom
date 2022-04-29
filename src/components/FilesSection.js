@@ -6,7 +6,7 @@ import GlistTable from "./GlistTable";
 import './OpenDir.css';
 import isAuthenticated from '../utils/isAuthenticated';
 
-const FilesSection = ({ username, setFilepath, setActiveMenu, setRunpath }) => {
+const FilesSection = ({ username, setFilepath, setActiveMenu, setRunpath, setDirpath }) => {
   const [error, setError] = useState("");
 
   let file = '/home/' + username;
@@ -101,13 +101,15 @@ const FilesSection = ({ username, setFilepath, setActiveMenu, setRunpath }) => {
                     </svg>
                     <br />
                     <a onClick={() => {
+                      let path = dirLink + "/" + item.filename;
                       if (item.filename.indexOf('.') == -1) {
-                        setRunpath(dirLink + "/" + item.filename);
+                        setRunpath(path.replace(/\/+/g, '/'));
                         setActiveMenu('output');
                       } else {
-                        setFilepath(dirLink + "/" + item.filename);
+                        setFilepath(path.replace(/\/+/g, '/'));
                         setActiveMenu('open');
                       }
+                      setDirpath(dirLink.replace(/\/+/g, '/'));
                     }}
                       className="text-center"
                       style={{ cursor: 'pointer', color: '#1e1e1e' }}
@@ -139,6 +141,7 @@ const FilesSection = ({ username, setFilepath, setActiveMenu, setRunpath }) => {
               pathArr && pathArr.length > 0 && pathArr.map(
                 (item, key) => {
                   dirLink += "/" + item;
+
                   return key < pathArr.length - 1 ?
                     <span key={key}><a
                       href={"/@" + username + dirLink}>{item}</a> / </span>

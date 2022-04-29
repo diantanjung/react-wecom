@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import TerminalSection from './TerminalSection'
+import TerminalrunSection from './TerminalrunSection'
 import { Terminal } from "xterm";
 import LocalEchoController from 'local-echo';
 import { FitAddon } from 'xterm-addon-fit';
 
-const RightSection = ({ activeMenu, username }) => {
+const RightSection = ({ activeMenu, username, filepath, dirpath }) => {
     let activeSection, heightCls;
     const term = new Terminal({
         convertEol: true,
@@ -36,7 +37,19 @@ const RightSection = ({ activeMenu, username }) => {
                 fitAddon={fitAddon}
                 username={username}
                 activeMenu={activeMenu}
-            />
+            />;
+            break;
+        case 'run':
+            heightCls = 'setengah';
+            activeSection = <TerminalrunSection
+                term={term}
+                localEcho={localEcho}
+                fitAddon={fitAddon}
+                username={username}
+                activeMenu={activeMenu}
+                filepath={filepath}
+                dirpath={dirpath}
+            />;
             break;
         case 'output':
             heightCls = 'hilang';

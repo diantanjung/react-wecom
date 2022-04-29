@@ -19,7 +19,7 @@ import isAuthenticated from "../utils/isAuthenticated";
 // const fitAddon = new FitAddon();
 
 
-const TerminalSection = ({ term, localEcho, fitAddon }) => {
+const TerminalrunSection = ({ term, localEcho, fitAddon, filepath, dirpath, activeMenu }) => {
     const [username] = useState(localStorage.username);
 
     useEffect(() => {
@@ -93,6 +93,21 @@ const TerminalSection = ({ term, localEcho, fitAddon }) => {
                 var send = new TextEncoder().encode("\x01" + size);
                 console.log('resizing to', send);
                 ws.send(send);
+
+                console.log(activeMenu);
+                if (activeMenu == "run") {
+                    var cmdStr = "\x01cd " + dirpath + "\n";
+                    ws.send(cmdStr);
+
+                    cmdStr = "\x01go build " + filepath + "\n";
+                    ws.send(cmdStr);
+
+                    cmdStr = "\x01clear\n";
+                    ws.send(cmdStr);
+
+                    cmdStr = "\x01go run " + filepath + "\n";
+                    ws.send(cmdStr);
+                }
             });
             term.onResize(function (event) {
                 var rows = event.rows;
@@ -151,4 +166,4 @@ const TerminalSection = ({ term, localEcho, fitAddon }) => {
     );
 }
 
-export default TerminalSection
+export default TerminalrunSection
