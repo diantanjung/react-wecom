@@ -8,9 +8,9 @@ const EditorSection = ({ filepath, username, activeMenu }) => {
     const [activeMinimap, setActiveMinimap] = useState(true);
 
     useEffect(() => {
-        if(activeMenu == "open"){
+        if (activeMenu == "open") {
             setActiveMinimap(true);
-        }else{
+        } else {
             setActiveMinimap(false);
         }
     }, [activeMenu]);
@@ -59,12 +59,29 @@ const EditorSection = ({ filepath, username, activeMenu }) => {
             });
     }
 
+    const updateFile = (newValue, e) => {
+        let val = {
+            "path_str": filepath,
+            "file_str": newValue
+        }
+
+        axiosInstance()
+            .patch("/open", JSON.stringify(val))
+            .then((res) => {
+                console.log("data updated");
+            })
+            .catch((err) => {
+                console.log("error updated");
+            });
+    }
+
     return (
         <Editor
             height="100%"
             theme="vs-dark"
             defaultLanguage="go"
             value={code}
+            onChange={updateFile}
             options={{
                 minimap: {
                     enabled: activeMinimap,

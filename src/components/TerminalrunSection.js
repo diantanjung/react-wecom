@@ -102,9 +102,6 @@ const TerminalrunSection = ({ term, localEcho, fitAddon, filepath, dirpath, acti
                     cmdStr = "\x01go build " + filepath + "\n";
                     ws.send(cmdStr);
 
-                    cmdStr = "\x01clear\n";
-                    ws.send(cmdStr);
-
                     cmdStr = "\x01go run " + filepath + "\n";
                     ws.send(cmdStr);
                 }
