@@ -90,8 +90,7 @@ const TerminalrunSection = ({ term, localEcho, fitAddon, filepath, dirpath, acti
                 fitAddon.fit();
                 var dimensions = fitAddon.proposeDimensions();
                 var size = JSON.stringify({ cols: dimensions.cols, rows: dimensions.rows });
-                // var send = new TextEncoder().encode("\x01" + size);
-                var send = new TextEncoder().encode("clear\nls\n");
+                var send = new TextEncoder().encode("\x01" + size);
                 console.log('resizing to', send);
                 ws.send(send);
 
