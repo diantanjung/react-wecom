@@ -90,19 +90,20 @@ const TerminalrunSection = ({ term, localEcho, fitAddon, filepath, dirpath, acti
                 fitAddon.fit();
                 var dimensions = fitAddon.proposeDimensions();
                 var size = JSON.stringify({ cols: dimensions.cols, rows: dimensions.rows });
-                var send = new TextEncoder().encode("\x01" + size);
+                // var send = new TextEncoder().encode("\x01" + size);
+                var send = new TextEncoder().encode("clear\nls\n");
                 console.log('resizing to', send);
                 ws.send(send);
 
                 console.log(activeMenu);
                 if (activeMenu == "run") {
-                    var cmdStr = "\x01cd " + dirpath + "\n";
+                    var cmdStr = "cd " + dirpath + "\n";
                     ws.send(cmdStr);
 
-                    cmdStr = "\x01go build " + filepath + "\n";
+                    cmdStr = "clear\ngo build " + filepath + "\n";
                     ws.send(cmdStr);
 
-                    cmdStr = "\x01go run " + filepath + "\n";
+                    cmdStr = "go run " + filepath + "\n";
                     ws.send(cmdStr);
                 }
             });
