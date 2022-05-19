@@ -6,6 +6,7 @@ import Editor from "@monaco-editor/react";
 const EditorSection = ({ filepath, username, activeMenu }) => {
     const [code, setCode] = useState("");
     const [activeMinimap, setActiveMinimap] = useState(true);
+    const [language, setLanguage] = useState("go");
 
     useEffect(() => {
         if (activeMenu == "open") {
@@ -14,6 +15,15 @@ const EditorSection = ({ filepath, username, activeMenu }) => {
             setActiveMinimap(false);
         }
     }, [activeMenu]);
+
+    useEffect(() => {
+        let sls = filepath.slice(-3);
+        if ( sls == ".go") {
+            setLanguage("go");
+        } else if( sls == ".rs") {
+            setLanguage("rust");
+        }
+    }, [filepath]);
 
     useEffect(() => {
         (
@@ -79,7 +89,7 @@ const EditorSection = ({ filepath, username, activeMenu }) => {
         <Editor
             height="100%"
             theme="vs-dark"
-            defaultLanguage="go"
+            defaultLanguage={language}
             value={code}
             onChange={updateFile}
             options={{
