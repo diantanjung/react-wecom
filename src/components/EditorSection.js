@@ -18,10 +18,12 @@ const EditorSection = ({ filepath, username, activeMenu }) => {
 
     useEffect(() => {
         let sls = filepath.slice(-3);
-        if ( sls == ".go") {
+        if (sls == ".go") {
             setLanguage("go");
-        } else if( sls == ".rs") {
+        } else if (sls == ".rs") {
             setLanguage("rust");
+        } else if (sls == ".rkt") {
+            setLanguage("racket");
         }
     }, [filepath]);
 
