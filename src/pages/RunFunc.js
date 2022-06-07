@@ -74,7 +74,7 @@ const RunFunc = () => {
                             </tr>
                             <tr>
                                 <th>Output</th>
-                                <td>{data.message}</td>
+                                <td><pre>{data.message}</pre></td>
                             </tr>
                         </thead>
                     </table>
