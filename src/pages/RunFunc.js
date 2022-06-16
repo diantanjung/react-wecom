@@ -11,16 +11,10 @@ const RunFunc = () => {
     let location = useLocation();
     let runpath = location.pathname.substring(username.length + 3);
 
-    query.forEach(
-        (val, key) => {
-            args[key] = val;
-        }
-    );
-
-    console.log(args);
-    
     const [data, setData] = useState([]);
     const [error, setError] = useState("");
+
+    
 
     useEffect(() => {
         (
@@ -33,6 +27,15 @@ const RunFunc = () => {
     }, []);
 
     const runFunc = () => {
+        query.forEach(
+            (val, key) => {
+                if (typeof args[key] !== 'undefined'){
+                    setError("A parameter should have one value only.");
+                }else{
+                    args[key] = val;
+                }
+            }
+        );
         axiosInstance()
             .get('/runfunc', {
                 params: {
