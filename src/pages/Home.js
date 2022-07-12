@@ -4,9 +4,9 @@ import axiosInstance from "../helpers/axiosInstance";
 import RightSection from '../components/RightSection';
 import LeftSection from '../components/LeftSection';
 
-const Home = () => {
+const Home = ({username, setUsername}) => {
     const [activeMenu, setActiveMenu] = useState('files');
-    const [username, setUsername] = useState(localStorage.username || 'guest');
+    
     const [filepath, setFilepath] = useState('');
     const [dirpath, setDirpath] = useState('');
 
