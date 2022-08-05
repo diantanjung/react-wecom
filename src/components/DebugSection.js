@@ -5,7 +5,8 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
   const [log, setLog] = useState([]);
   const [isrun, setIsrun] = useState(false);
 
-  const url = 'ws://localhost:9000/wsdebug';
+  const url = `${process.env.REACT_APP_BE_WSDEBUG}`;
+  
   const ws = useRef();
   if (!ws.current) {
     ws.current = new WebSocket(url);
@@ -68,7 +69,6 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
 
   const init = () => {
     if (ws.current.readyState === 1 && ws.current) {
-      setLog(['initializing...']);
       ws.current.send("cd " + dirpath);
       ws.current.send("dlv debug --allow-non-terminal-interactive=true");
       breakpoints.forEach(
