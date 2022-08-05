@@ -4,8 +4,9 @@ import TerminalrunSection from './TerminalrunSection'
 import { Terminal } from "xterm";
 import LocalEchoController from 'local-echo';
 import { FitAddon } from 'xterm-addon-fit';
+import DebugSection from './DebugSection';
 
-const RightSection = ({ activeMenu, username, filepath, dirpath }) => {
+const RightSection = ({ activeMenu, username, filepath, dirpath, breakpoints, setCurbp, setLastbp, curbp }) => {
     let activeSection, heightCls;
     const term = new Terminal({
         convertEol: true,
@@ -49,6 +50,17 @@ const RightSection = ({ activeMenu, username, filepath, dirpath }) => {
                 activeMenu={activeMenu}
                 filepath={filepath}
                 dirpath={dirpath}
+            />;
+            break;
+        case 'debug':
+            heightCls = 'setengah';
+            activeSection = <DebugSection 
+            filepath={filepath}
+            dirpath={dirpath}
+            breakpoints={breakpoints}
+            setCurbp={setCurbp}
+            setLastbp={setLastbp}
+            curbp={curbp}
             />;
             break;
         case 'output':

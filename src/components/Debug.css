@@ -1,0 +1,13 @@
+.tombol {
+    margin-right: 7px !important;
+    margin-bottom: 15px !important;
+}
+
+.h5-debug {
+    color: gray;
+}
+
+.hdebug-bg {
+    background-color: #333333;
+    padding: 5px 0px 5px 5px;
+}

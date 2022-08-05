@@ -4,7 +4,7 @@ import FilesSection from './FilesSection';
 import HelpSection from './HelpSection';
 import OutputSection from './OutputSection';
 
-const LeftSection = ({ activeMenu, username, setActiveMenu, filepath, setFilepath, setDirpath }) => {
+const LeftSection = ({ activeMenu, username, setActiveMenu, filepath, setFilepath, dirpath, setDirpath, breakpoints, setBreakpoints, curbp, lastbp }) => {
     const [runpath, setRunpath] = useState('');
     let activeSection, heightCls, bgCls;
     switch (activeMenu) {
@@ -24,6 +24,8 @@ const LeftSection = ({ activeMenu, username, setActiveMenu, filepath, setFilepat
                 username={username}
                 filepath={filepath}
                 activeMenu={activeMenu}
+                breakpoints={breakpoints}
+                setBreakpoints={setBreakpoints}
             />;
             heightCls = 'full';
             bgCls = 'bg-gelap';
@@ -33,6 +35,8 @@ const LeftSection = ({ activeMenu, username, setActiveMenu, filepath, setFilepat
                 username={username}
                 filepath={filepath}
                 activeMenu={activeMenu}
+                breakpoints={breakpoints}
+                setBreakpoints={setBreakpoints}
             />;
             heightCls = 'setengah';
             bgCls = 'bg-gelap';
@@ -42,6 +46,21 @@ const LeftSection = ({ activeMenu, username, setActiveMenu, filepath, setFilepat
                 username={username}
                 filepath={filepath}
                 activeMenu={activeMenu}
+                breakpoints={breakpoints}
+                setBreakpoints={setBreakpoints}
+            />;
+            heightCls = 'setengah';
+            bgCls = 'bg-gelap';
+            break;
+        case 'debug':
+            activeSection = <EditorSection
+                username={username}
+                filepath={filepath}
+                activeMenu={activeMenu}
+                breakpoints={breakpoints}
+                setBreakpoints={setBreakpoints}
+                curbp={curbp}
+                lastbp={lastbp}
             />;
             heightCls = 'setengah';
             bgCls = 'bg-gelap';
@@ -63,6 +82,8 @@ const LeftSection = ({ activeMenu, username, setActiveMenu, filepath, setFilepat
             activeSection = <EditorSection
                 username={username}
                 filepath={filepath}
+                breakpoints={breakpoints}
+                setBreakpoints={setBreakpoints}
             />;
             heightCls = 'full';
             bgCls = 'bg-gelap';

@@ -9,6 +9,11 @@ const Home = ({username, setUsername}) => {
     
     const [filepath, setFilepath] = useState('');
     const [dirpath, setDirpath] = useState('');
+    
+    const [breakpoints, setBreakpoints] = useState([]);
+    const [curbp, setCurbp] = useState(0);
+    const [lastbp, setLastbp] = useState(0);
+
 
     window.handleLogin = async (googleData) => {
         axiosInstance()
@@ -54,12 +59,21 @@ const Home = ({username, setUsername}) => {
                         filepath={filepath}
                         setFilepath={setFilepath}
                         setDirpath={setDirpath}
+                        dirpath={dirpath}
+                        breakpoints={breakpoints}
+                        setBreakpoints={setBreakpoints}
+                        curbp={curbp}
+                        lastbp={lastbp}
                     />
                     <RightSection
                         activeMenu={activeMenu}
                         username={username}
                         filepath={filepath}
                         dirpath={dirpath}
+                        breakpoints={breakpoints}
+                        setCurbp={setCurbp}
+                        setLastbp={setLastbp}
+                        curbp={curbp}
                     />
                 </div>
                 </div>

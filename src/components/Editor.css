@@ -1,0 +1,27 @@
+.btnMarginCls {
+    color: #1e1e1e;
+}
+
+.btnMarginCls:after {
+    content: '\2b24';
+}
+
+.btnMarginCls:hover {
+    color: red;
+}
+
+.breakPointCls {
+    color: red;
+}
+
+.breakPointCls:after {
+    content: '\2b24';
+}
+
+.currentBp {
+    color: #d0bc23;
+}
+
+.currentBp:after {
+    content: '\25B6';
+}
