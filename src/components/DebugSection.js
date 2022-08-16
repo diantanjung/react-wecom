@@ -1,13 +1,19 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import "./Debug.css"
 
 const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLastbp }) => {
   const [log, setLog] = useState([]);
+  const [local, setLocal] = useState({});
   const [isrun, setIsrun] = useState(false);
 
   const url = `${process.env.REACT_APP_BE_WSDEBUG}`;
-  
+
   const ws = useRef();
+
+  // useLayoutEffect(() => {
+
+  // }, [ws]);
+
   if (!ws.current) {
     ws.current = new WebSocket(url);
   }
@@ -16,16 +22,27 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
     console.log("close");
   };
 
+  // ws.current.onopen = function () {
+  //   console.log("open");
+  // };
+
   ws.current.onmessage = function (evt) {
-    console.log(isValidLog(evt.data), evt.data);
-    if(isValidLog(evt.data)){
-      setLog([...log, evt.data.replace('(dlv) ','')]);
-    }else if(evt.data.includes("has exited with status")){
-      stop();
-    }else if(evt.data.includes("hits goroutine")){
+    console.log(isValidLog(evt.data), evt.data, new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data));
+    if (isValidLog(evt.data)) {
+      setLog([...log, evt.data.replace('(dlv) ', '')]);
+    } else if (new RegExp("\\(dlv\\) Process \\d+ has exited with status 0").test(evt.data)) {
+      restart();
+    } else if (evt.data.includes("hits goroutine")) {
       let curLine = getCurLine(evt.data);
       setLastbp(curbp);
       setCurbp(parseInt(curLine));
+      ws.current.send("locals");
+    } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data)) {
+      console.log("change local now!");
+      let { variabel, value } = getVarVal(evt.data);
+      // local[variabel] = value;
+      // setLocal(local);
+      changeLocal(variabel, value);
     }
   };
 
@@ -38,7 +55,9 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
       "\\(dlv\\) Process restarted",
       "hits goroutine",
       " for list of commands",
-      "has exited with status"
+      "\\(dlv\\) Process \\d+ has exited with status 0",
+      "(no locals)",
+      "[a-zA-Z\\d_]+ = .+"
     ];
     if (new RegExp(substrings.join("|")).test(msg)) {
       return false;
@@ -50,6 +69,13 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
   const getCurLine = (str) => {
     const regexp = /.go:(\d+) \(hits goroutine/g
     return Array.from(str.matchAll(regexp), m => m[1]);
+  }
+
+  const getVarVal = (str) => {
+    const regexp = /([a-zA-Z\d_]+) = (.+)/g
+    let match = regexp.exec(str);
+    let variabel = match[1], value = match[2];
+    return { variabel, value };
   }
 
   // const addBreakpoints = () => {
@@ -79,9 +105,16 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
     }
   }
 
+  const locals = () => {
+    if (ws.current.readyState === 1 && ws.current) {
+      ws.current.send("locals");
+    }
+  }
+
   const cont = () => {
     if (ws.current.readyState === 1 && ws.current) {
       ws.current.send("continue");
+      // ws.current.send("locals");
     }
   }
 
@@ -89,7 +122,6 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
     if (ws.current.readyState === 1 && ws.current) {
       ws.current.send("exit");
       setIsrun(false);
-      setLog([]);
     }
   }
 
@@ -103,8 +135,14 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
   const startDebug = () => {
     if (ws.current.readyState === 1 && ws.current) {
       init();
+      setLog([]);
       setIsrun(true);
     }
+  }
+
+  const changeLocal = (variabel, value) => {
+    local[variabel] = value;
+    setLocal(local);
   }
 
   return (
@@ -123,6 +161,14 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
           <a href="#" onClick={startDebug} className="btn btn-primary btn-sm tombol" title="Run and Debug">Run and Debug</a>
         }
 
+      </div>
+      <div>
+        <div className="hdebug-bg">
+          <h6 className="h5-debug">Variables</h6>
+        </div>
+        <div>
+          {Object.keys(local).map((key, index) => <div key={index}>{key} = {local[key]}</div>)}
+        </div>
       </div>
       <div>
         <div className="hdebug-bg">

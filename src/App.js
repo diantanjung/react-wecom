@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Login from "./pages/Login"
 import LoginGithub from "./pages/LoginGithub"
 import RunFunc from "./pages/RunFunc";
+import Psaux from "./pages/Psaux";
 import "./App.css";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom"
 
@@ -18,6 +19,8 @@ function App() {
             <Route path="/@:username" component={RunFunc}></Route>
             <Route path="/login-old" component={Login}></Route>
             <Route path="/login" ><LoginGithub setUsername={setUsername}/></Route>
+            <Route path="/ps-aux" ><Psaux /></Route>
+
           </Switch>
         </div>
       </Router>
