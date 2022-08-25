@@ -5,6 +5,10 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
   const [log, setLog] = useState([]);
   const [local, setLocal] = useState({});
   const [isrun, setIsrun] = useState(false);
+  const [error, setError] = useState("");
+  const oldValue = useRef({})
+
+  const fieldVar = useRef({})
 
   const url = `${process.env.REACT_APP_BE_WSDEBUG}`;
 
@@ -27,7 +31,7 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
   // };
 
   ws.current.onmessage = function (evt) {
-    console.log(isValidLog(evt.data), evt.data, new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data));
+    console.log(isValidLog(evt.data), evt.data, new RegExp("Command failed:").test(evt.data));
     if (isValidLog(evt.data)) {
       setLog([...log, evt.data.replace('(dlv) ', '')]);
     } else if (new RegExp("\\(dlv\\) Process \\d+ has exited with status 0").test(evt.data)) {
@@ -37,12 +41,20 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
       setLastbp(curbp);
       setCurbp(parseInt(curLine));
       ws.current.send("locals");
+    } else if (new RegExp(/^Command failed:/g).test(evt.data)) {
+      console.log("Command failed gaes", oldValue.current);
+      setError(evt.data);
+      setLocal(oldValue.current);
+
+      for (let key in oldValue.current) {
+        fieldVar.current[key].value = oldValue.current[key];
+      }
+
     } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data)) {
-      console.log("change local now!");
-      let { variabel, value } = getVarVal(evt.data);
-      // local[variabel] = value;
-      // setLocal(local);
-      changeLocal(variabel, value);
+      let temp = getVarVal(evt.data);
+      setLocal(prev => {
+        return { ...prev, ...temp };
+      });
     }
   };
 
@@ -53,11 +65,13 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
       "\\(dlv\\) Breakpoint ",
       "\\(dlv\\) Command failed",
       "\\(dlv\\) Process restarted",
+      "\\(dlv\\) >",
       "hits goroutine",
       " for list of commands",
       "\\(dlv\\) Process \\d+ has exited with status 0",
       "(no locals)",
-      "[a-zA-Z\\d_]+ = .+"
+      "[a-zA-Z\\d_]+ = .+",
+      "Command failed:"
     ];
     if (new RegExp(substrings.join("|")).test(msg)) {
       return false;
@@ -75,7 +89,9 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
     const regexp = /([a-zA-Z\d_]+) = (.+)/g
     let match = regexp.exec(str);
     let variabel = match[1], value = match[2];
-    return { variabel, value };
+    let temp = {};
+    temp[variabel] = value;
+    return temp;
   }
 
   // const addBreakpoints = () => {
@@ -111,28 +127,33 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
     }
   }
 
-  const cont = () => {
+  const cont = (e) => {
+    e.preventDefault();
     if (ws.current.readyState === 1 && ws.current) {
       ws.current.send("continue");
       // ws.current.send("locals");
     }
   }
 
-  const stop = () => {
+  const stop = (e) => {
+    e.preventDefault();
     if (ws.current.readyState === 1 && ws.current) {
       ws.current.send("exit");
       setIsrun(false);
     }
   }
 
-  const restart = () => {
+  const restart = (e) => {
+    e.preventDefault();
     if (ws.current.readyState === 1 && ws.current) {
       ws.current.send("restart");
       setLog([]);
+      setLocal({});
     }
   }
 
-  const startDebug = () => {
+  const startDebug = (e) => {
+    e.preventDefault();
     if (ws.current.readyState === 1 && ws.current) {
       init();
       setLog([]);
@@ -140,9 +161,21 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
     }
   }
 
-  const changeLocal = (variabel, value) => {
-    local[variabel] = value;
-    setLocal(local);
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      setError("");
+      const target = e.target;
+      const variabel = target.name;
+      const value = target.value;
+
+      oldValue.current = local;
+      setLocal(prev => {
+        return { ...prev, [variabel]: value }
+      });
+
+      console.log(`call ${variabel} = ${value}`);
+      ws.current.send(`call ${variabel} = ${value}`);
+    }
   }
 
   return (
@@ -167,7 +200,21 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
           <h6 className="h5-debug">Variables</h6>
         </div>
         <div>
-          {Object.keys(local).map((key, index) => <div key={index}>{key} = {local[key]}</div>)}
+          <br />
+          {
+            Object.keys(local).map((key, index) =>
+              <div className="form-group row" key={index}>
+                <label className="col-sm-1 col-form-label">{key} </label>
+                <div className="col-sm-10">
+                  <input ref={el => fieldVar.current[key] = el} type="text" name={key} defaultValue={local[key] || ""} className="var-field" onKeyDown={handleKeyDown} />
+                </div>
+              </div>
+            )}
+          {error !== "" && (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          )}
         </div>
       </div>
       <div>
