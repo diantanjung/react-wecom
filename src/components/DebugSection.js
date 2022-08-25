@@ -143,8 +143,7 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
     }
   }
 
-  const restart = (e) => {
-    e.preventDefault();
+  const restart = () => {
     if (ws.current.readyState === 1 && ws.current) {
       ws.current.send("restart");
       setLog([]);
