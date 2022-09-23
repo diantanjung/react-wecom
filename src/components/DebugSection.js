@@ -31,18 +31,17 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
   // };
 
   ws.current.onmessage = function (evt) {
-    console.log(isValidLog(evt.data), evt.data, new RegExp("Command failed:").test(evt.data));
+    console.log(isValidLog(evt.data), evt.data);
     if (isValidLog(evt.data)) {
       setLog([...log, evt.data.replace('(dlv) ', '')]);
     } else if (new RegExp("\\(dlv\\) Process \\d+ has exited with status 0").test(evt.data)) {
       restart();
-    } else if (evt.data.includes("hits goroutine")) {
+    } else if (new RegExp(/> \S+ .+.go:(\d+)/g).test(evt.data)) {
       let curLine = getCurLine(evt.data);
       setLastbp(curbp);
       setCurbp(parseInt(curLine));
       ws.current.send("locals");
     } else if (new RegExp(/^Command failed:/g).test(evt.data)) {
-      console.log("Command failed gaes", oldValue.current);
       setError(evt.data);
       setLocal(oldValue.current);
 
@@ -65,7 +64,7 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
       "\\(dlv\\) Breakpoint ",
       "\\(dlv\\) Command failed",
       "\\(dlv\\) Process restarted",
-      "\\(dlv\\) >",
+      /> \S+ .+.go:\d+/g,
       "hits goroutine",
       " for list of commands",
       "\\(dlv\\) Process \\d+ has exited with status 0",
@@ -73,7 +72,8 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
       "[a-zA-Z\\d_]+ = .+",
       "Command failed:"
     ];
-    if (new RegExp(substrings.join("|")).test(msg)) {
+    const regexp = /> \S+ .+.go:\d+|\[33m|\(dlv\) Breakpoint|\(dlv\) Command failed|\(dlv\) Process restarted|hits goroutine|for list of commands|\(dlv\) Process \d+ has exited with status 0|\(no locals\)|[a-zA-Z0-9_]+ = .+|Command failed:/g
+    if (new RegExp(regexp).test(msg)) {
       return false;
     } else {
       return true;
@@ -81,7 +81,7 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
   }
 
   const getCurLine = (str) => {
-    const regexp = /.go:(\d+) \(hits goroutine/g
+    const regexp = /> \S+ .+.go:(\d+)/g
     return Array.from(str.matchAll(regexp), m => m[1]);
   }
 
@@ -134,6 +134,12 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
       // ws.current.send("locals");
     }
   }
+  const stepover = (e) => {
+    e.preventDefault();
+    if (ws.current.readyState === 1 && ws.current) {
+      ws.current.send("next");
+    }
+  }
 
   const stop = (e) => {
     e.preventDefault();
@@ -171,8 +177,6 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
       setLocal(prev => {
         return { ...prev, [variabel]: value }
       });
-
-      console.log(`call ${variabel} = ${value}`);
       ws.current.send(`call ${variabel} = ${value}`);
     }
   }
@@ -183,7 +187,7 @@ const DebugSection = ({ filepath, dirpath, breakpoints, setCurbp, curbp, setLast
         {isrun ?
           <>
             <a href="#" onClick={cont} className="btn btn-dark btn-sm tombol" title="Continue"><span className="fa fa-play"></span></a>
-            <a href="#" className="btn btn-dark btn-sm tombol" title="Step Over"><span className="fa fa-rotate-right"></span></a>
+            <a href="#" onClick={stepover} className="btn btn-dark btn-sm tombol" title="Step Over"><span className="fa fa-rotate-right"></span></a>
             <a href="#" className="btn btn-dark btn-sm tombol" title="Step Into"><span className="fa fa-arrow-down"></span></a>
             <a href="#" className="btn btn-dark btn-sm tombol" title="Step Out"><span className="fa fa-arrow-up"></span></a>
             <a href="#" onClick={restart} className="btn btn-dark btn-sm tombol" title="Restart"><span className="fa fa-rotate-left"></span></a>

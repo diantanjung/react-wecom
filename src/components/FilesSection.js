@@ -5,12 +5,17 @@ import ListTable from "./ListTable";
 import GlistTable from "./GlistTable";
 import './OpenDir.css';
 import isAuthenticated from '../utils/isAuthenticated';
+import { useDispatch } from 'react-redux';
+import { addFiletabItem } from '../feature/filetabSlice';
 
-const FilesSection = ({ username, setFilepath, setActiveMenu, setRunpath, setDirpath }) => {
+const FilesSection = ({ username, setActiveMenu, setRunpath, setDirpath }) => {
+  const dispatch = useDispatch();
+
   const [error, setError] = useState("");
 
   let file = '/home/' + username;
   const [data, setData] = useState([]);
+  const [codeFile, setCodeFile] = useState("");
   const pathArr = file.split("/");
   let dirLink = "";
 
@@ -75,6 +80,42 @@ const FilesSection = ({ username, setFilepath, setActiveMenu, setRunpath, setDir
       });
   }
 
+  const getCodeFile = (filepath, dirpath) => {
+    const sls = filepath.slice(-3);
+    let language = ""
+    if (sls == ".go") {
+      language = "go";
+    } else if (sls == ".rs") {
+      language = "rust";
+    } else if (sls == ".rkt") {
+      language = "racket";
+    }
+
+    if (isAuthenticated()) {
+      (async () => {
+        try {
+          const res = await axiosInstance()
+            .post("/opendirfile", JSON.stringify({ "path_str": filepath, "username": username }));
+          dispatch(addFiletabItem({ filepath, dirpath, code: res.data.file_str, language }));
+          setActiveMenu('open');
+        } catch (err) {
+          console.log(err);
+        }
+      })()
+    } else {
+      (async () => {
+        try {
+          const res = await axiosInstance()
+            .post("/gopendirfile", JSON.stringify({ "path_str": filepath, "username": "guest" }));
+          dispatch(addFiletabItem({ filepath, dirpath, code: res.data.file_str, language }));
+          setActiveMenu('open');
+        } catch (err) {
+          console.log(err);
+        }
+      })()
+    }
+  }
+
   const GridContent = () => (
     <div className="row">
       {
@@ -106,8 +147,10 @@ const FilesSection = ({ username, setFilepath, setActiveMenu, setRunpath, setDir
                         setRunpath(path.replace(/\/+/g, '/'));
                         setActiveMenu('output');
                       } else {
-                        setFilepath(path.replace(/\/+/g, '/'));
-                        setActiveMenu('open');
+                        const filepath = path.replace(/\/+/g, '/');
+                        const dirpath = dirLink.replace(/\/+/g, '/')
+                        getCodeFile(filepath, dirpath);
+
                       }
                       setDirpath(dirLink.replace(/\/+/g, '/'));
                     }}

@@ -7,13 +7,15 @@ import LeftSection from '../components/LeftSection';
 const Home = ({username, setUsername}) => {
     const [activeMenu, setActiveMenu] = useState('files');
     
-    const [filepath, setFilepath] = useState('');
+    const [filepath, setFilepath] = useState([]);
     const [dirpath, setDirpath] = useState('');
     
     const [breakpoints, setBreakpoints] = useState([]);
     const [curbp, setCurbp] = useState(0);
     const [lastbp, setLastbp] = useState(0);
 
+
+    const [filetab, setFiletab] = useState([]);
 
     window.handleLogin = async (googleData) => {
         axiosInstance()

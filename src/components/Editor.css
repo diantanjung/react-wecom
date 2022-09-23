@@ -25,3 +25,32 @@
 .currentBp:after {
     content: '\25B6';
 }
+
+.btn-close {
+    margin-left: 2px;
+    text-align:center;
+    display: inline-block;
+    width: 16px;
+    border-radius: 4px;
+    color: gray;
+    text-decoration: none;
+    padding: 0;
+  }
+
+  .btn-close:hover{
+    color: #fff;
+    background-color: gray;
+  }
+
+  .file-item {
+    padding: 5px 10px 5px;
+  }
+
+  .file-item:hover {
+    cursor:pointer;
+  }
+
+  .aktif {
+    border-bottom: 1px solid #fff;
+    color: #fff;
+  }
