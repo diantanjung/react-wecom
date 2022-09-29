@@ -8,21 +8,9 @@ import { deleteFiletabItem, setDecoration, addBreakpoint, removeBreakpoint, setD
 
 const EditorSection = ({ activeMenu }) => {
     const dispatch = useDispatch();
-    const { filetabItems, cursor, aktifPath } = useSelector((store) => store.filetabs);
+    const { filetabItems, cursor, aktifTabItem } = useSelector((store) => store.filetabs);
     const [activeMinimap, setActiveMinimap] = useState(true);
 
-    let aktifTabItem = {
-        filepath: "Untitled",
-        dirpath: "",
-        decorations: [],
-        breakpoints: [],
-        code: " ",
-        language: "go"
-    }
-
-    if (filetabItems.length > 0) {
-        aktifTabItem = filetabItems.find((item) => item.filepath === aktifPath);
-    }
 
     const monacoObjects = useRef(null);
 
@@ -34,12 +22,98 @@ const EditorSection = ({ activeMenu }) => {
         }
     }, [activeMenu]);
 
+    const handleEditorDidMount = (editor, monaco) => {
+        monacoObjects.current = {
+            editor,
+            monaco
+        };
+
+        if (monacoObjects.current != null) {
+            let { monaco, editor } = monacoObjects.current;
+            const decors = [];
+            if (aktifTabItem.decorations.length > 0) {
+                for (let index = 1; index < aktifTabItem.decorations.length; index++) {
+                    decors[index] = {
+                        decoration: editor.deltaDecorations(
+                            [],
+                            applyDecoration(new monaco.Range(index, 1, index, 1), aktifTabItem.decorations[index].classNama)
+                        ),
+                        classNama: aktifTabItem.decorations[index].classNama
+                    };
+                }
+            } else {
+                const maxline = editor.getModel().getLineCount();
+                for (let index = 1; index <= maxline; index++) {
+                    decors[index] = {
+                        decoration: editor.deltaDecorations(
+                            [],
+                            applyDecoration(new monaco.Range(index, 1, index, 1), 'btnMarginCls')
+                        ),
+                        classNama: 'btnMarginCls'
+                    };
+                }
+            }
+            dispatch(setDecorations({ decorations: decors }));
+        }
+
+    }
+
+    useEffect(() => {
+        if (monacoObjects.current != null && aktifTabItem.decorations.length > 0) {
+            let { monaco, editor } = monacoObjects.current;
+            // console.log("aktifTabItem", aktifTabItem);
+            editor.onMouseDown(function (e) {
+                var clsName = e.target.element.className;
+                var lineNum = parseInt(e.target.position.lineNumber);
+                if (!monacoObjects.current) return;
+                if (typeof aktifTabItem.decorations[lineNum] !== 'undefined') {
+                    var r = new monaco.Range(lineNum, 1, lineNum, 1);
+                    if (clsName.includes("btnMarginCls")) {
+                        // console.log("on click btnMarginCls");
+                        const breakPoint = editor.deltaDecorations(
+                            [aktifTabItem.decorations[lineNum].decoration],
+                            applyDecoration(r, 'breakPointCls')
+                        );
+                        dispatch(addBreakpoint({ line: lineNum, decoration: breakPoint, classNama: 'breakPointCls' }));
+                    } else if (clsName.includes('breakPointCls')) {
+                        // console.log("on click breakPointCls");
+                        const btnMargin = editor.deltaDecorations(
+                            [aktifTabItem.decorations[lineNum].decoration],
+                            applyDecoration(r, 'btnMarginCls')
+                        );
+                        dispatch(removeBreakpoint({ line: lineNum, decoration: btnMargin, classNama: 'btnMarginCls' }));
+                    }
+                }
+            });
+        }
+    }, [aktifTabItem.decorations]);
+
+    useEffect(() => {
+        // console.log("change aktifTabItem.filepath", monacoObjects.current);
+        if (monacoObjects.current != null && aktifTabItem.decorations.length > 0) {
+            // console.log("load decorations", aktifTabItem.decorations.length);
+            let { monaco, editor } = monacoObjects.current;
+            const decors = [];
+            for (let index = 1; index < aktifTabItem.decorations.length; index++) {
+                decors[index] = {
+                    decoration: editor.deltaDecorations(
+                        [],
+                        applyDecoration(new monaco.Range(index, 1, index, 1), aktifTabItem.decorations[index].classNama)
+                    ),
+                    classNama: aktifTabItem.decorations[index].classNama
+                };
+            }
+            dispatch(setDecorations({ decorations: decors }));
+        }
+    }, [aktifTabItem.filepath]);
+
     const applyDecoration = (r, c) => [
         {
             range: r,
             options: {
                 isWholeLine: true,
-                glyphMarginClassName: c
+                // glyphMarginClassName: c,
+                marginClassName: c,
             },
         },
     ]
@@ -47,7 +121,7 @@ const EditorSection = ({ activeMenu }) => {
 
     const updateFile = async (newValue, e) => {
         const val = {
-            "path_str": aktifPath,
+            "path_str": aktifTabItem.filepath,
             "file_str": newValue
         }
 
@@ -71,89 +145,7 @@ const EditorSection = ({ activeMenu }) => {
         },
     ];
 
-    const handleEditorDidMount = (editor, monaco) => {
-        monacoObjects.current = {
-            editor,
-            monaco
-        };
 
-        // setTimeout(function () {
-        //     if (monacoObjects.current != null) {
-        //         let maxline = monacoObjects.current.editor.getModel().getLineCount();
-        //         console.log("test 6 model", monacoObjects.current.editor.getModel());
-        //         console.log("test 6", maxline);
-        //     }
-        // }, 5000);
-
-        if (monacoObjects.current != null) {
-            // let { monaco, editor } = monacoObjects.current;
-            // if (aktifTabItem.decorations.length > 0) {
-            //     console.log("decoration > 0 ");
-            //     aktifTabItem.decorations.forEach((item, index) => {
-            //         console.log("index ", index, "classnama", item.classNama);
-            //         let r = new monaco.Range(index, 1, index, 1);
-            //         editor.deltaDecorations(
-            //             [],
-            //             applyDecoration(r, item.classNama)
-            //         );
-            //     });
-            // } else {
-            //     console.log("decoration == 0 ");
-            //     let maxline = editor.getModel().getLineCount();
-            //     console.log("maxline", maxline);
-            //     const rmax = new monaco.Range(1, 1, maxline, 1);
-            //     const btnMargin = editor.deltaDecorations(
-            //         [],
-            //         applyDecoration(rmax, 'btnMarginCls')
-            //     );
-            //     console.log("btnMargin ", btnMargin);
-            //     // dispatch(setDecorations({ filepath: aktifPath, maxline: maxline, decoration: btnMargin, classNama: 'btnMarginCls' }));
-            // }
-
-            // console.log("editor model 2 : ", editor.getModel());
-
-            // editor.onMouseDown(function (e) {
-            //     var clsName = e.target.element.classList[2];
-            //     var lineNum = parseInt(e.target.position.lineNumber);
-            //     if (!monacoObjects.current) return;
-            //     const { monaco, editor } = monacoObjects.current;
-            //     var r = new monaco.Range(lineNum, 1, lineNum, 1);
-            //     if (clsName == 'btnMarginCls') {
-            //         // bpdecor[lineNum] = editor.deltaDecorations(
-            //         //     [],
-            //         //     applyDecoration(r, 'breakPointCls')
-            //         // );
-            //         // setBpdecor(bpdecor);
-            //         // saveBpLocal(lineNum);
-            //         const decoration = editor.deltaDecorations(
-            //             [],
-            //             applyDecoration(r, 'breakPointCls')
-            //         );
-            //         dispatch(setDecoration({ filepath: aktifFile, line: lineNum, decoration, classNama: 'breakPointCls' }));
-            //         dispatch(addBreakpoint({ filepath: aktifFile, line: lineNum }));
-            //     } else if (clsName == 'breakPointCls') {
-            //         // bpdecor[lineNum] = editor.deltaDecorations(
-            //         //     [bpdecor[lineNum]],
-            //         //     applyDecoration(r, 'btnMarginCls')
-            //         // );
-            //         // setBpdecor(bpdecor);
-            //         // removeBpLocal(lineNum);
-            //         const filetabItem = filetabItems.find((item) => item.filepath === aktifFile);
-            //         const rmdecor = editor.deltaDecorations(
-            //             [filetabItem.decorations[lineNum]],
-            //             applyDecoration(r, 'btnMarginCls')
-            //         );
-            //         // setTimeout(() => {
-            //         //     console.log(filetabItem.decorations);
-            //         // }, 5000);
-
-            //         dispatch(setDecoration({ filepath: aktifFile, line: lineNum, decoration: rmdecor, classNama: 'btnMarginCls' }));
-            //         dispatch(removeBreakpoint({ filepath: aktifFile, line: lineNum }));
-            //     }
-            // });
-        }
-
-    }
 
     const clickFile = (filepath) => {
         dispatch(setAktifPath({ filepath }));
@@ -168,7 +160,7 @@ const EditorSection = ({ activeMenu }) => {
             <ul className="nav">
                 {filetabItems.length > 0 ?
                     filetabItems.map((item, key) =>
-                        <li className={"nav-item file-item " + (item.filepath == aktifPath && 'aktif')} key={key}>
+                        <li className={"nav-item file-item " + (item.filepath == aktifTabItem.filepath && 'aktif')} key={key}>
                             <span onClick={() => clickFile(item.filepath)}>{item.filepath} </span>
                             <a href="#" className="btn-close" onClick={() => clickClose(item.filepath)}>x</a>
                         </li>

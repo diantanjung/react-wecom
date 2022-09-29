@@ -9,7 +9,14 @@ const initialState = {
         lastPath: "",
         lastLine: 0
     },
-    aktifPath:""
+    aktifTabItem: {
+        filepath: "Untitled-1",
+        dirpath: "",
+        decorations: [],
+        breakpoints: [],
+        code: " ",
+        language: "go"
+    }
 };
 
 const filetabSlice = createSlice({
@@ -28,37 +35,55 @@ const filetabSlice = createSlice({
                     language: payload.language
                 });
 
-                state.aktifPath = payload.filepath;
+                state.aktifTabItem = {
+                    filepath: payload.filepath,
+                    dirpath: payload.dirpath,
+                    decorations: [],
+                    breakpoints: [],
+                    code: payload.code,
+                    language: payload.language
+                };
             }
         },
         setAktifPath: (state, { payload }) => {
-            state.aktifPath = payload.filepath;
+            state.aktifTabItem = state.filetabItems.find((item) => item.filepath === payload.filepath);
         },
         deleteFiletabItem: (state, { payload }) => {
             state.filetabItems = state.filetabItems.filter((item) => item.filepath !== payload.filepath);
-            const maxIdx = state.filetabItems.length - 1; 
-            if(maxIdx >= 0){
-                state.aktifPath = state.filetabItems[maxIdx].filepath;
+            const maxIdx = state.filetabItems.length - 1;
+            if (maxIdx >= 0) {
+                state.aktifTabItem = state.filetabItems[maxIdx];
             }
         },
         addBreakpoint: (state, { payload }) => {
-            const filetabItem = state.filetabItems.find((item) => item.filepath === payload.filepath);
-            filetabItem.breakpoints.push(payload.line);
+            // const filetabItem = state.filetabItems.find((item) => item.filepath === payload.filepath);
+            if (state.aktifTabItem.breakpoints.indexOf(payload.line) === -1) {
+                state.aktifTabItem.breakpoints.push(payload.line);
+            }
+            state.aktifTabItem.decorations[payload.line] = { decoration: payload.decoration, classNama: payload.classNama };
+            
+            const itemIndex = state.filetabItems.findIndex((item) => item.filepath === state.aktifTabItem.filepath);
+            state.filetabItems[itemIndex] = state.aktifTabItem;
+            
         },
         removeBreakpoint: (state, { payload }) => {
-            const filetabItem = state.filetabItems.find((item) => item.filepath === payload.filepath);
-            filetabItem.breakpoints = filetabItem.breakpoints.filter((item) => item !== payload.line);
-
+            state.aktifTabItem.breakpoints = state.aktifTabItem.breakpoints.filter((item) => item !== payload.line);
+            state.aktifTabItem.decorations[payload.line] = { decoration: payload.decoration, classNama: payload.classNama };
+            
+            const itemIndex = state.filetabItems.findIndex((item) => item.filepath === state.aktifTabItem.filepath);
+            state.filetabItems[itemIndex] = state.aktifTabItem;
         },
         setDecoration: (state, { payload }) => {
-            const filetabItem = state.filetabItems.find((item) => item.filepath === payload.filepath);
-            filetabItem.decorations[payload.line] = { decoration: payload.decoration, classNama: payload.classNama };
+            state.aktifTabItem.decorations[payload.line] = { decoration: payload.decoration, classNama: payload.classNama };
+            
+            const itemIndex = state.filetabItems.findIndex((item) => item.filepath === state.aktifTabItem.filepath);
+            state.filetabItems[itemIndex] = state.aktifTabItem;
         },
         setDecorations: (state, { payload }) => {
-            const filetabItem = state.filetabItems.find((item) => item.filepath === payload.filepath);
-            for (let index = 1; index <= payload.maxline; index++) {
-                filetabItem.decorations[index] = { decoration: payload.decoration, classNama: payload.classNama };
-            }
+            state.aktifTabItem.decorations = payload.decorations;
+            
+            const itemIndex = state.filetabItems.findIndex((item) => item.filepath === state.aktifTabItem.filepath);
+            state.filetabItems[itemIndex] = state.aktifTabItem;
         },
         setCursor: (state, { payload }) => {
             state.cursor.curPath = payload.curPath;
@@ -69,7 +94,7 @@ const filetabSlice = createSlice({
     },
 });
 
-console.log(filetabSlice);
+// console.log(filetabSlice);
 export const { addFiletabItem, setAktifPath, deleteFiletabItem, addBreakpoint, removeBreakpoint, setDecoration, setDecorations, setCursor } =
     filetabSlice.actions;
 
