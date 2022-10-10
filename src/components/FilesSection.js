@@ -6,7 +6,7 @@ import GlistTable from "./GlistTable";
 import './OpenDir.css';
 import isAuthenticated from '../utils/isAuthenticated';
 import { useDispatch } from 'react-redux';
-import { addFiletabItem } from '../feature/filetabSlice';
+import { addFiletabItem, addFileItem } from '../feature/filetabSlice';
 
 const FilesSection = ({ username, setActiveMenu, setRunpath, setDirpath }) => {
   const dispatch = useDispatch();
@@ -149,8 +149,9 @@ const FilesSection = ({ username, setActiveMenu, setRunpath, setDirpath }) => {
                       } else {
                         const filepath = path.replace(/\/+/g, '/');
                         const dirpath = dirLink.replace(/\/+/g, '/')
-                        getCodeFile(filepath, dirpath);
-
+                        // getCodeFile(filepath, dirpath);
+                        dispatch(addFileItem(filepath));
+                        setActiveMenu('open');
                       }
                       setDirpath(dirLink.replace(/\/+/g, '/'));
                     }}

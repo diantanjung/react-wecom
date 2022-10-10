@@ -54,13 +54,7 @@ const RightSection = ({ activeMenu, username, filepath, dirpath, breakpoints, se
             break;
         case 'debug':
             heightCls = 'setengah';
-            activeSection = <DebugSection 
-            filepath={filepath}
-            dirpath={dirpath}
-            breakpoints={breakpoints}
-            setCurbp={setCurbp}
-            setLastbp={setLastbp}
-            curbp={curbp}
+            activeSection = <DebugSection
             />;
             break;
         case 'output':
