@@ -31,6 +31,7 @@ const initialState = {
         lastPath: "",
         lastLine: 0
     },
+    startDir: "",
     aktifTabItem: {
         filepath: "Untitled-1",
         dirpath: "",
@@ -136,6 +137,9 @@ const filetabSlice = createSlice({
             state.cursor.curLine = 0;
 
         },
+        setStartDir: (state, { payload }) => {
+            state.startDir = payload.startDir
+        },
     },
     extraReducers: {
         [addFileItem.fulfilled]: (state, { payload }) => {
@@ -169,7 +173,7 @@ const filetabSlice = createSlice({
 });
 
 // console.log(filetabSlice);
-export const { addFiletabItem, setAktifPath, deleteFiletabItem, addBreakpoint, removeBreakpoint, setDecoration, setCursorDecoration, setDecorations, setCursor, clearCursor } =
+export const { addFiletabItem, setAktifPath, deleteFiletabItem, addBreakpoint, removeBreakpoint, setDecoration, setCursorDecoration, setDecorations, setCursor, clearCursor, setStartDir } =
     filetabSlice.actions;
 
 export default filetabSlice.reducer;

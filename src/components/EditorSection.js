@@ -64,6 +64,9 @@ const EditorSection = ({ activeMenu }) => {
             editor.onMouseDown(function (e) {
                 var clsName = e.target.element.className;
                 var lineNum = parseInt(e.target.position.lineNumber);
+                if(clsName.includes("line-numbers")){
+                    clsName = e.target.element.previousSibling.className;
+                }
                 if (!monacoObjects.current) return;
                 if (typeof aktifTabItem.decorations[lineNum] !== 'undefined') {
                     var r = new monaco.Range(lineNum, 1, lineNum, 1);

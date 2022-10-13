@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { setCursor, addFileItem, clearCursor } from "../feature/filetabSlice";
+import { setCursor, addFileItem, clearCursor, setStartDir } from "../feature/filetabSlice";
 import "./Debug.css"
 
 const DebugSection = () => {
   const dispatch = useDispatch();
-  const { aktifTabItem } = useSelector((store) => store.filetabs);
+  const { aktifTabItem, startDir } = useSelector((store) => store.filetabs);
 
   const [log, setLog] = useState([]);
   const [local, setLocal] = useState({});
@@ -45,13 +45,19 @@ const DebugSection = () => {
       console.log(isValidLog(evt.data), evt.data);
       if (isValidLog(evt.data)) {
         setLog([...log, evt.data.replace('(dlv) ', '')]);
-      } else if (new RegExp(/Process [0-9]+ has exited with status [0-9]+/g).test(evt.data)) {
+      }else if (new RegExp(/^Command failed:/g).test(evt.data)) {
+        setError(evt.data);
+        setLocal(oldValue.current);
+
+        for (let key in oldValue.current) {
+          fieldVar.current[key].value = oldValue.current[key];
+        }
+
+      } else if (new RegExp(/could not launch process: not an executable file/g).test(evt.data)) {
         if (ws.current.readyState === 1 && ws.current) {
-          ws.current.send("exit");
           setIsrun(false);
           setLog([]);
           setLocal({});
-          dispatch(clearCursor());
         }
       } else if (new RegExp(/> \S+ .+.go:(\d+)/g).test(evt.data)) {
         const regexp = /> [^ ]+ ([^ ]+):([0-9]+)/g;
@@ -59,10 +65,11 @@ const DebugSection = () => {
         const curLine = parseInt(match[2]);
         let curPath = match[1];
         if (curPath.indexOf('./') !== -1) {
-          curPath = aktifTabItem.dirpath + "/" + curPath;
+          curPath = startDir + "/" + curPath;
         }
         dispatch(addFileItem(curPath)).then(res => {
           if (res) {
+            console.log("res.payload.filepath : ", res.payload.filepath);
             dispatch(setCursor({ curPath: res.payload.filepath, curLine }));
           }
         });
@@ -83,8 +90,6 @@ const DebugSection = () => {
       }
     };
   }
-
-
 
   const absolute = ({ base, relative }) => {
     var stack = base.split("/"),
@@ -116,7 +121,7 @@ const DebugSection = () => {
       "[a-zA-Z\\d_]+ = .+",
       "Command failed:"
     ];
-    const regexp = /> \S+ .+.go:\d+|\[33m|\(dlv\) Breakpoint|\(dlv\) Command failed|\(dlv\) Process restarted|hits goroutine|for list of commands|Process \d+ has exited with status 0|\(no locals\)|[a-zA-Z0-9_]+ = .+|Command failed:/g
+    const regexp = /> \S+ .+.go:\d+|\[33m|\(dlv\) Breakpoint|\(dlv\) Command failed|\(dlv\) Process restarted|hits goroutine|for list of commands|Process \d+ has exited with status 0|\(no locals\)|[a-zA-Z0-9_]+ = .+|Command failed:|could not launch process: not an executable file/g
     if (new RegExp(regexp).test(msg)) {
       return false;
     } else {
@@ -149,7 +154,6 @@ const DebugSection = () => {
       ws.current.send("continue");
     }
   }
-
 
   const cont = (e) => {
     e.preventDefault();
@@ -209,6 +213,7 @@ const DebugSection = () => {
     e.preventDefault();
     console.log("ws.current.readyState : ", ws.current.readyState);
     if (ws.current.readyState === 1 && ws.current) {
+      dispatch(setStartDir({ startDir: aktifTabItem.dirpath }));
       ws.current.send("cd " + aktifTabItem.dirpath);
       ws.current.send("dlv debug --allow-non-terminal-interactive=true");
       aktifTabItem.breakpoints.forEach(
@@ -218,7 +223,7 @@ const DebugSection = () => {
       ws.current.send("continue");
       setLog([]);
       setIsrun(true);
-    }
+    }else{}
   }
 
   const handleKeyDown = (e) => {
