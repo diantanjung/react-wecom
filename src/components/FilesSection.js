@@ -8,15 +8,17 @@ import isAuthenticated from '../utils/isAuthenticated';
 import { useDispatch } from 'react-redux';
 import { addFiletabItem, addFileItem } from '../feature/filetabSlice';
 
-const FilesSection = ({ username, setActiveMenu, setRunpath, setDirpath }) => {
+const FilesSection = ({ username, setActiveMenu, setRunpath, setDirpath, dirpath }) => {
   const dispatch = useDispatch();
 
   const [error, setError] = useState("");
 
-  let file = '/home/' + username;
+  const [fileaddress, setFileaddress] = useState('/home/' + username);
+
+  // let file = '/home/' + username ;
   const [data, setData] = useState([]);
   const [codeFile, setCodeFile] = useState("");
-  const pathArr = file.split("/");
+  const pathArr = fileaddress.split("/");
   let dirLink = "";
 
   useEffect(() => {
@@ -29,7 +31,7 @@ const FilesSection = ({ username, setActiveMenu, setRunpath, setDirpath }) => {
         }
       }
     )();
-  }, []);
+  }, [fileaddress]);
 
   const logout = () => {
     localStorage.removeItem("access_token");
@@ -40,7 +42,7 @@ const FilesSection = ({ username, setActiveMenu, setRunpath, setDirpath }) => {
 
   const openDirFile = () => {
     axiosInstance()
-      .post("/opendirfile", JSON.stringify({ "path_str": file, "username": username }))
+      .post("/opendirfile", JSON.stringify({ "path_str": fileaddress, "username": username }))
       .then((res) => {
         if (res.data.is_dir) {
           setData(res.data.dir_list);
@@ -61,7 +63,7 @@ const FilesSection = ({ username, setActiveMenu, setRunpath, setDirpath }) => {
 
   const gopenDirFile = () => {
     axiosInstance()
-      .post("/gopendirfile", JSON.stringify({ "path_str": file, "username": "guest" }))
+      .post("/gopendirfile", JSON.stringify({ "path_str": fileaddress, "username": "guest" }))
       .then((res) => {
         if (res.data.is_dir) {
           setData(res.data.dir_list);
@@ -131,7 +133,11 @@ const FilesSection = ({ username, setActiveMenu, setRunpath, setDirpath }) => {
                         d="M1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-8.5A1.75 1.75 0 0014.25 3h-6.5a.25.25 0 01-.2-.1l-.9-1.2c-.33-.44-.85-.7-1.4-.7h-3.5z" />
                     </svg>
                     <br />
-                    <a href={"/@" + username + dirLink + "/" + item.filename} className="text-center">{item.filename}</a>
+                    {/* <a href={"/@" + username + dirLink + "/" + item.filename} className="text-center">{item.filename}</a> */}
+                    <a onClick={() => {
+                      setFileaddress(dirLink + "/" + item.filename);
+                    }}
+                      className="text-center">{item.filename}</a>
                   </div>
                   :
                   <div>
@@ -207,9 +213,9 @@ const FilesSection = ({ username, setActiveMenu, setRunpath, setDirpath }) => {
               {/*<ListContent />*/}
               {
                 isAuthenticated() ?
-                  <ListTable file={file} />
+                  <ListTable file={fileaddress} />
                   :
-                  <GlistTable file={file} />
+                  <GlistTable file={fileaddress} />
               }
             </Tab>
           </Tabs>

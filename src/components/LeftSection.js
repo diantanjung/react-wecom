@@ -13,6 +13,7 @@ const LeftSection = ({ activeMenu, username, setActiveMenu, filepath, setFilepat
                 username={username}
                 setFilepath={setFilepath}
                 setRunpath={setRunpath}
+                dirpath={dirpath}
                 setDirpath={setDirpath}
                 setActiveMenu={setActiveMenu}
             />;

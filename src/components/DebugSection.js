@@ -24,6 +24,8 @@ const DebugSection = () => {
 
   // }, [ws]);
 
+  console.log('aktifTabItem', aktifTabItem);
+
   useEffect(() => {
     ws.current = new WebSocket(url);
 
@@ -40,12 +42,14 @@ const DebugSection = () => {
     };
   }, []);
 
-  if (ws.current) {
+
+
+  const goOnMessage = () => {
     ws.current.onmessage = function (evt) {
-      console.log(isValidLog(evt.data), evt.data);
-      if (isValidLog(evt.data)) {
+      console.log(goValidLog(evt.data), evt.data);
+      if (goValidLog(evt.data)) {
         setLog([...log, evt.data.replace('(dlv) ', '')]);
-      }else if (new RegExp(/^Command failed:/g).test(evt.data)) {
+      } else if (new RegExp(/^Command failed:/g).test(evt.data)) {
         setError(evt.data);
         setLocal(oldValue.current);
 
@@ -83,7 +87,7 @@ const DebugSection = () => {
         }
 
       } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data)) {
-        let temp = getVarVal(evt.data);
+        let temp = goGetVarVal(evt.data);
         setLocal(prev => {
           return { ...prev, ...temp };
         });
@@ -91,37 +95,54 @@ const DebugSection = () => {
     };
   }
 
-  const absolute = ({ base, relative }) => {
-    var stack = base.split("/"),
-      parts = relative.split("/");
-    stack.pop(); // remove current file name (or empty string)
-    // (omit if "base" is the current folder without trailing slash)
-    for (var i = 0; i < parts.length; i++) {
-      if (parts[i] == ".")
-        continue;
-      if (parts[i] == "..")
-        stack.pop();
-      else
-        stack.push(parts[i]);
-    }
-    return stack.join("/");
+  const rustOnMessage = () => {
+    ws.current.onmessage = function (evt) {
+      console.log("rust log", rustValidLog(evt.data), evt.data);
+      if (rustValidLog(evt.data)) {
+        setLog([...log, evt.data]);
+      } else if (new RegExp(/frame.+at .+.rs:[0-9]+:[0-9]+/g).test(evt.data)) {
+        const regexp = /frame.+at (.+.rs):([0-9]+):[0-9]+/g;
+        const match = regexp.exec(evt.data);
+        const curLine = parseInt(match[2]);
+        let curPath = match[1];
+        curPath = startDir + "/" + curPath;
+        dispatch(addFileItem(curPath)).then(res => {
+          if (res) {
+            console.log("res.payload.filepath : ", res.payload.filepath);
+            dispatch(setCursor({ curPath: res.payload.filepath, curLine }));
+          }
+        });
+        ws.current.send("v");
+      } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data)) {
+        let temp = rustGetVarVal(evt.data);
+        setLocal(prev => {
+          return { ...prev, ...temp };
+        });
+      }
+    };
   }
 
-  const isValidLog = (msg) => {
-    const substrings = [
-      "\\[33m",
-      "\\[34m",
-      "\\(dlv\\) Breakpoint ",
-      "\\(dlv\\) Command failed",
-      "\\(dlv\\) Process restarted",
-      /> \S+ .+.go:\d+/g,
-      "hits goroutine",
-      " for list of commands",
-      "(no locals)",
-      "[a-zA-Z\\d_]+ = .+",
-      "Command failed:"
-    ];
+  if (ws.current) {
+    if (aktifTabItem.language == 'go') {
+      goOnMessage();
+    }
+
+    if (aktifTabItem.language == 'rust') {
+      rustOnMessage();
+    }
+  }
+
+  const goValidLog = (msg) => {
     const regexp = /> \S+ .+.go:\d+|\[33m|\(dlv\) Breakpoint|\(dlv\) Command failed|\(dlv\) Process restarted|hits goroutine|for list of commands|Process \d+ has exited with status 0|\(no locals\)|[a-zA-Z0-9_]+ = .+|Command failed:|could not launch process: not an executable file/g
+    if (new RegExp(regexp).test(msg)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  const rustValidLog = (msg) => {
+    const regexp = / /g
     if (new RegExp(regexp).test(msg)) {
       return false;
     } else {
@@ -134,7 +155,7 @@ const DebugSection = () => {
     return Array.from(str.matchAll(regexp), m => m[1]);
   }
 
-  const getVarVal = (str) => {
+  const goGetVarVal = (str) => {
     const regexp = /([a-zA-Z\d_]+) = (.+)/g
     let match = regexp.exec(str);
     let variabel = match[1], value = match[2];
@@ -143,43 +164,63 @@ const DebugSection = () => {
     return temp;
   }
 
-  const init = () => {
-    if (ws.current.readyState === 1 && ws.current) {
-      ws.current.send("cd " + aktifTabItem.dirpath);
-      ws.current.send("dlv debug --allow-non-terminal-interactive=true");
-      aktifTabItem.breakpoints.forEach(
-        (val) => {
-          ws.current.send("break " + aktifTabItem.filepath + ":" + val);
-        });
-      ws.current.send("continue");
-    }
+  const rustGetVarVal = (str) => {
+    const regexp = /([a-zA-Z\d_]+) = (.+)/g
+    let match = regexp.exec(str);
+    let variabel = match[1], value = match[2];
+    let temp = {};
+    temp[variabel] = value;
+    return temp;
   }
 
   const cont = (e) => {
     e.preventDefault();
     if (ws.current.readyState === 1 && ws.current) {
-      ws.current.send("continue");
+      if (aktifTabItem.language == 'go') {
+        ws.current.send("continue");
+      }
+
+      if (aktifTabItem.language == 'rust') {
+        ws.current.send("c");
+      }
+
       // ws.current.send("locals");
     }
   }
   const stepover = (e) => {
     e.preventDefault();
-    if (ws.current.readyState === 1 && ws.current) {
+    if (aktifTabItem.language == 'go') {
       ws.current.send("next");
+    }
+
+    if (aktifTabItem.language == 'rust') {
+      ws.current.send("n");
     }
   }
 
   const stepInto = (e) => {
     e.preventDefault();
     if (ws.current.readyState === 1 && ws.current) {
-      ws.current.send("step");
+      if (aktifTabItem.language == 'go') {
+        ws.current.send("step");
+      }
+
+      if (aktifTabItem.language == 'rust') {
+        ws.current.send("s");
+      }
     }
   }
 
   const stepOut = (e) => {
     e.preventDefault();
     if (ws.current.readyState === 1 && ws.current) {
-      ws.current.send("stepout");
+      if (aktifTabItem.language == 'go') {
+        ws.current.send("stepout");
+      }
+
+      if (aktifTabItem.language == 'rust') {
+        ws.current.send("finish");
+      }
     }
   }
 
@@ -196,36 +237,78 @@ const DebugSection = () => {
 
   const restart = () => {
     if (ws.current.readyState === 1 && ws.current) {
-      ws.current.send("exit");
+
       setLog([]);
       setLocal({});
-      ws.current.send("cd " + aktifTabItem.dirpath);
-      ws.current.send("dlv debug --allow-non-terminal-interactive=true");
-      aktifTabItem.breakpoints.forEach(
-        (val) => {
-          ws.current.send("break " + aktifTabItem.filepath + ":" + val);
-        });
-      ws.current.send("continue");
+
+      if (aktifTabItem.language == 'go') {
+        ws.current.send("exit");
+        ws.current.send("cd " + aktifTabItem.dirpath);
+        ws.current.send("dlv debug --allow-non-terminal-interactive=true");
+        aktifTabItem.breakpoints.forEach(
+          (val) => {
+            ws.current.send("break " + aktifTabItem.filepath + ":" + val);
+          });
+        ws.current.send("continue");
+      }
+
+      if (aktifTabItem.language == 'rust') {
+        ws.current.send("q");
+        const rootFolder = aktifTabItem.dirpath.slice(0, -4);
+        const projectName = rootFolder.split('/').pop();
+        const targetDebug = rootFolder + '/target/debug/' + projectName;
+        ws.current.send("cd " + rootFolder);
+        ws.current.send("cargo build");
+        ws.current.send("lldb " + targetDebug);
+        ws.current.send("settings set auto-confirm 1");
+        aktifTabItem.breakpoints.forEach(
+          (val) => {
+            ws.current.send("b " + aktifTabItem.filepath + ":" + val);
+          });
+        ws.current.send("run");
+        ws.current.send("pwd");
+      }
     }
   }
 
   const startDebug = (e) => {
     e.preventDefault();
-    console.log("ws.current.readyState : ", ws.current.readyState);
+    // console.log("ws.current.readyState : ", ws.current.readyState);
     if (ws.current.readyState === 1 && ws.current) {
       dispatch(setStartDir({ startDir: aktifTabItem.dirpath }));
-      ws.current.send("cd " + aktifTabItem.dirpath);
-      ws.current.send("dlv debug --allow-non-terminal-interactive=true");
-      aktifTabItem.breakpoints.forEach(
-        (val) => {
-          ws.current.send("break " + aktifTabItem.filepath + ":" + val);
-        });
-      ws.current.send("continue");
+
+      if (aktifTabItem.language == 'go') {
+        ws.current.send("cd " + aktifTabItem.dirpath);
+        ws.current.send("dlv debug --allow-non-terminal-interactive=true");
+        aktifTabItem.breakpoints.forEach(
+          (val) => {
+            ws.current.send("break " + aktifTabItem.filepath + ":" + val);
+          });
+        ws.current.send("continue");
+      }
+
+      if (aktifTabItem.language == 'rust') {
+        console.log('start rust debugging');
+        const rootFolder = aktifTabItem.dirpath.slice(0, -4);
+        const projectName = rootFolder.split('/').pop();
+        const targetDebug = rootFolder + '/target/debug/' + projectName;
+        ws.current.send("cd " + rootFolder);
+        ws.current.send("cargo build");
+        ws.current.send("lldb " + targetDebug);
+        ws.current.send("settings set auto-confirm 1");
+        aktifTabItem.breakpoints.forEach(
+          (val) => {
+            ws.current.send("b " + aktifTabItem.filepath + ":" + val);
+          });
+        ws.current.send("run");
+      }
+
       setLog([]);
       setIsrun(true);
-    }else{}
+    }
   }
 
+  // sementara di non aktifkan untuk edit variable
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       setError("");
@@ -239,16 +322,6 @@ const DebugSection = () => {
       });
       ws.current.send(`call ${variabel} = ${value}`);
     }
-  }
-
-  const cobaKlik = (e) => {
-    e.preventDefault();
-    console.log("Test Aja");
-    dispatch(addFileItem("/home/guest/coba.go")).then(res => {
-      if (res) {
-        dispatch(setCursor({ curPath: "/home/guest/coba.go", curLine: 6 }));
-      }
-    });
   }
 
   const waitForSocketConnection = () => {
@@ -297,7 +370,7 @@ const DebugSection = () => {
               <div className="form-group row" key={index}>
                 <label className="col-sm-1 col-form-label">{key} </label>
                 <div className="col-sm-10">
-                  <input ref={el => fieldVar.current[key] = el} type="text" name={key} defaultValue={local[key] || ""} className="var-field" onKeyDown={handleKeyDown} />
+                  <input ref={el => fieldVar.current[key] = el} type="text" name={key} defaultValue={local[key] || ""} className="var-field" style={{ width: "750px" }} />
                 </div>
               </div>
             )}
