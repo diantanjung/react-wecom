@@ -131,7 +131,7 @@ const EditorSection = ({ activeMenu }) => {
                 if (cursor.curPath !== "") {
                     const curItem = filetabItems.find((item) => item.filepath === cursor.curPath);
                     let tempDecor = [];
-                    if (typeof curItem !== undefined) {
+                    if (typeof curItem !== 'undefined') {
                         tempDecor = curItem.decorations[cursor.curLine].decoration;
                     }
                     let r = new monaco.Range(cursor.curLine, 1, cursor.curLine, 1);

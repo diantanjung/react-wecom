@@ -100,20 +100,28 @@ const DebugSection = () => {
       console.log("rust log", rustValidLog(evt.data), evt.data);
       if (rustValidLog(evt.data)) {
         setLog([...log, evt.data]);
-      } else if (new RegExp(/frame.+at .+.rs:[0-9]+:[0-9]+/g).test(evt.data)) {
+      } else if (new RegExp(/Process [0-9]+ exited with status/g).test(evt.data)) {
+        if (ws.current.readyState === 1 && ws.current) {
+          setIsrun(false);
+          setLog([]);
+          setLocal({});
+        }
+      }  else if (new RegExp(/frame.+at .+.rs:[0-9]+:[0-9]+/g).test(evt.data)) {
         const regexp = /frame.+at (.+.rs):([0-9]+):[0-9]+/g;
         const match = regexp.exec(evt.data);
         const curLine = parseInt(match[2]);
         let curPath = match[1];
         curPath = startDir + "/" + curPath;
         dispatch(addFileItem(curPath)).then(res => {
-          if (res) {
+          if (typeof res.payload.filepath !== 'undefined') {
             console.log("res.payload.filepath : ", res.payload.filepath);
             dispatch(setCursor({ curPath: res.payload.filepath, curLine }));
+          } else {
+            ws.current.send("finish");
           }
         });
         ws.current.send("v");
-      } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data)) {
+      } else if (new RegExp(/\(.+\) [a-zA-Z\d_]+ = .+/g).test(evt.data)) {
         let temp = rustGetVarVal(evt.data);
         setLocal(prev => {
           return { ...prev, ...temp };
@@ -165,7 +173,7 @@ const DebugSection = () => {
   }
 
   const rustGetVarVal = (str) => {
-    const regexp = /([a-zA-Z\d_]+) = (.+)/g
+    const regexp = /\(.+\) ([a-zA-Z\d_]+) = (.+)/g
     let match = regexp.exec(str);
     let variabel = match[1], value = match[2];
     let temp = {};
