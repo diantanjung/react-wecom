@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import TerminalSection from './TerminalSection'
 import TerminalrunSection from './TerminalrunSection'
+import TerminalracketSection from './TerminalracketSection'
 import { Terminal } from "xterm";
 import LocalEchoController from 'local-echo';
 import { FitAddon } from 'xterm-addon-fit';
 import DebugSection from './DebugSection';
+import { useSelector } from "react-redux";
 
 const RightSection = ({ activeMenu, username, filepath, dirpath, breakpoints, setCurbp, setLastbp, curbp }) => {
     let activeSection, heightCls;
@@ -22,6 +24,8 @@ const RightSection = ({ activeMenu, username, filepath, dirpath, breakpoints, se
     });
     const localEcho = new LocalEchoController();
     const fitAddon = new FitAddon();
+
+    const { aktifTabItem, startDir } = useSelector((store) => store.filetabs);
 
     switch (activeMenu) {
         case 'files':
@@ -54,8 +58,19 @@ const RightSection = ({ activeMenu, username, filepath, dirpath, breakpoints, se
             break;
         case 'debug':
             heightCls = 'setengah';
-            activeSection = <DebugSection
+            if (aktifTabItem.language == 'racket') {
+                activeSection = <TerminalracketSection
+                term={term}
+                localEcho={localEcho}
+                fitAddon={fitAddon}
+                username={username}
+                activeMenu={activeMenu}
+                filepath={filepath}
+                dirpath={dirpath}
             />;
+            }else{
+                activeSection = <DebugSection/>;
+            }
             break;
         case 'output':
             heightCls = 'hilang';

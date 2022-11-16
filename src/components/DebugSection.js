@@ -121,7 +121,7 @@ const DebugSection = () => {
           }
         });
         ws.current.send("v");
-      } else if (new RegExp(/\(.+\) [a-zA-Z\d_]+ = .+/g).test(evt.data)) {
+      } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data)) {
         let temp = rustGetVarVal(evt.data);
         setLocal(prev => {
           return { ...prev, ...temp };
@@ -173,7 +173,7 @@ const DebugSection = () => {
   }
 
   const rustGetVarVal = (str) => {
-    const regexp = /\(.+\) ([a-zA-Z\d_]+) = (.+)/g
+    const regexp = /([a-zA-Z\d_]+) = (.+)/g
     let match = regexp.exec(str);
     let variabel = match[1], value = match[2];
     let temp = {};
