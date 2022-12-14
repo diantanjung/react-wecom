@@ -1,9 +1,10 @@
 import axiosInstance from "../helpers/axiosInstance";
 import React, { useState, useEffect, useRef } from 'react';
 import Editor from "@monaco-editor/react";
-import './Editor.css'
-import { useSelector, useDispatch } from 'react-redux'
-import { deleteFiletabItem, addBreakpoint, removeBreakpoint, setDecorations, setCursorDecoration, setAktifPath } from "../feature/filetabSlice";
+import './Editor.css';
+import { useSelector, useDispatch } from 'react-redux';
+import isAuthenticated from '../utils/isAuthenticated';
+import { deleteFiletabItem, addBreakpoint, removeBreakpoint, setDecorations, setCursorDecoration, setAktifPath, addFiletabItem, addFiletabItemModel } from "../feature/filetabSlice";
 
 const EditorSection = ({ activeMenu }) => {
     const dispatch = useDispatch();
@@ -53,6 +54,89 @@ const EditorSection = ({ activeMenu }) => {
                 }
             }
             dispatch(setDecorations({ decorations: decors }));
+
+            const editorService = editor._codeEditorService;
+            const openEditorBase = editorService.openCodeEditor.bind(editorService);
+
+            monaco.languages.registerDefinitionProvider("go", {
+                provideDefinition: async (model, position, token) => {
+                    const filepath = model._associatedResource.path;
+                    const offset = model.getOffsetAt(position);
+                    const text = editor.getValue();
+                    const byteOffsetAt = Buffer.byteLength(text.substr(0, offset));
+
+                    let res = "";
+                    if (isAuthenticated()) {
+                        const username = localStorage.username || 'guest';
+                        res = await axiosInstance()
+                            .post("/rungodef", JSON.stringify({ "path_str": filepath, "offset": byteOffsetAt, "username": username }))
+                            .catch(function (error) {
+                                if (error.response) {
+                                    console.log(error.response.data);
+                                }
+                            });
+                    } else {
+                        res = await axiosInstance()
+                            .post("/grungodef", JSON.stringify({ "path_str": filepath, "offset": byteOffsetAt, "username": "guest" }))
+                            .catch(function (error) {
+                                if (error.response) {
+                                    console.log(error.response.data);
+                                }
+                            });
+                    }
+
+                    console.log("res", res);
+
+                    if (res) {
+                        if (monaco.editor.getModel(monaco.Uri.file(res.data.filepath)) === null){
+                            console.log("create model");
+                            monaco.editor.createModel(res.data.file_str, res.data.language, monaco.Uri.file(res.data.filepath));
+                        }
+
+                        dispatch(addFiletabItemModel({ filepath: res.data.filepath, dirpath: res.data.dirpath, code: res.data.file_str, language: res.data.language }));
+
+                        return {
+                            uri: monaco.Uri.file(res.data.filepath),
+                            range: {
+                                startLineNumber: res.data.line_number,
+                                startColumn: res.data.column,
+                                endLineNumber: res.data.line_number,
+                                endColumn: res.data.column
+                            }
+                            // range: {
+                            //         startLineNumber: 12,
+                            //         startColumn: 6,
+                            //         endLineNumber: 12,
+                            //         endColumn: 6
+                            //     }
+                        };
+                    }
+                }
+            });
+
+            editorService.openCodeEditor = async (input, source) => {
+                console.log("open Code Editor");
+                const result = await openEditorBase(input, source);
+                console.log("result", result);
+                if (result === null) {
+                    console.log("Open definition for:", input);
+                    let model = monaco.editor.getModel(input.resource);
+                    editor.setModel(model);
+                    editor.revealRangeInCenterIfOutsideViewport({
+                        startLineNumber: input.options.selection.startLineNumber,
+                        endLineNumber: input.options.selection.endLineNumber,
+                        startColumn: input.options.selection.startColumn,
+                        endColumn: input.options.selection.endColumn
+                    })
+                    editor.setPosition({
+                        lineNumber: input.options.selection.startLineNumber,
+                        column: input.options.selection.startColumn
+                    });
+                    const filepath = input.resource.path;
+                    dispatch(setAktifPath({ filepath }));
+                }
+                return result; // always return the base result
+            };
         }
 
     }
@@ -64,7 +148,7 @@ const EditorSection = ({ activeMenu }) => {
             editor.onMouseDown(function (e) {
                 var clsName = e.target.element.className;
                 var lineNum = parseInt(e.target.position.lineNumber);
-                if(clsName.includes("line-numbers")){
+                if (clsName.includes("line-numbers")) {
                     clsName = e.target.element.previousSibling.className;
                 }
                 if (!monacoObjects.current) return;
@@ -217,6 +301,16 @@ const EditorSection = ({ activeMenu }) => {
         dispatch(deleteFiletabItem({ filepath }));
     }
 
+    const cobaClick = () => {
+        console.log("coba click");
+        if (monacoObjects.current !== null) {
+            const { monaco, editor } = monacoObjects.current;
+            editor.setSelection(new monaco.Range(1, 9, 1, 13));
+            editor.trigger('', 'actions.find');
+        }
+
+    }
+
     return (
         <>
             <ul className="nav">
@@ -240,8 +334,8 @@ const EditorSection = ({ activeMenu }) => {
                 path={aktifTabItem.filepath}
                 defaultLanguage={aktifTabItem.language}
                 defaultValue={aktifTabItem.code}
-                onChange={updateFile}
                 onMount={handleEditorDidMount}
+                onChange={updateFile}
                 options={{
                     minimap: {
                         enabled: activeMinimap

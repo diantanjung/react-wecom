@@ -3,7 +3,7 @@ import axiosInstance from "../helpers/axiosInstance";
 import isAuthenticated from '../utils/isAuthenticated';
 
 export const addFileItem = createAsyncThunk(
-    'filetab/addFileItem',
+    'filetabs/addFileItem',
     async (filepath, thunkAPI) => {
         try {
             let resp = "";
@@ -21,7 +21,6 @@ export const addFileItem = createAsyncThunk(
         }
     }
 );
-
 
 const initialState = {
     filetabItems: [],
@@ -69,6 +68,21 @@ const filetabSlice = createSlice({
                         code: payload.code,
                         language: payload.language
                     };
+                }
+            }
+        },
+        addFiletabItemModel: (state, { payload }) => {
+            if (state.aktifTabItem.filepath !== payload.filepath) {
+                const isExist = state.filetabItems.find((item) => item.filepath === payload.filepath);
+                if (!isExist) {
+                    state.filetabItems.push({
+                        filepath: payload.filepath,
+                        dirpath: payload.dirpath,
+                        decorations: [],
+                        breakpoints: [],
+                        code: payload.code,
+                        language: payload.language
+                    });
                 }
             }
         },
@@ -143,7 +157,6 @@ const filetabSlice = createSlice({
     },
     extraReducers: {
         [addFileItem.fulfilled]: (state, { payload }) => {
-            console.log("get Content File : ", payload);
             if (state.aktifTabItem.filepath !== payload.filepath) {
                 const isExist = state.filetabItems.find((item) => item.filepath === payload.filepath);
                 if (isExist) {
@@ -173,7 +186,7 @@ const filetabSlice = createSlice({
 });
 
 // console.log(filetabSlice);
-export const { addFiletabItem, setAktifPath, deleteFiletabItem, addBreakpoint, removeBreakpoint, setDecoration, setCursorDecoration, setDecorations, setCursor, clearCursor, setStartDir } =
+export const { addFiletabItem, addFiletabItemModel, setAktifPath, deleteFiletabItem, addBreakpoint, removeBreakpoint, setDecoration, setCursorDecoration, setDecorations, setCursor, clearCursor, setStartDir } =
     filetabSlice.actions;
 
 export default filetabSlice.reducer;
