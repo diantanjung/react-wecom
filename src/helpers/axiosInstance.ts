@@ -3,7 +3,10 @@ import axios from "axios";
 export default () => {
   const baseURL = process.env.REACT_APP_BE_URL;
 
-  let headers = {};
+  const headers =  {
+    Authorization: ""
+  };
+
 
   if (localStorage.access_token) {
     headers.Authorization = `Bearer ${localStorage.access_token}`;
@@ -15,10 +18,11 @@ export default () => {
   });
 
   axiosInstance.interceptors.response.use(
-    (response) =>
-      new Promise((resolve, reject) => {
+    (response) => {
+      return new Promise((resolve, reject) => {
         resolve(response);
-      }),
+      })
+    },
     (error) => {
       return new Promise((resolve, reject) => {
         reject(error);

@@ -3,7 +3,6 @@ import { useState } from "react";
 // import { Redirect } from "react-router-dom";
 // import { useHistory } from "react-router-dom";
 import axiosInstance from "../helpers/axiosInstance";
-import GoogleLogin from 'react-google-login';
 import "./Login.css";
 
 export default function Login(props) {

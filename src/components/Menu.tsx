@@ -4,13 +4,18 @@ import styles from "./Menu.module.css";
 import { RiCloseLine } from "react-icons/ri";
 import GithubIcon from "mdi-react/GithubIcon";
 
-const Menu = ({ activeMenu, setActiveMenu }) => {
+type MenuProps = {
+    activeMenu: string
+    setActiveMenu: (activeMenu:string) => void
+}
+
+const Menu = ({ activeMenu, setActiveMenu }: MenuProps) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const logout = () => {
         localStorage.removeItem("access_token");
         localStorage.removeItem("username");
-        window.location = "/";
+        window.location.href = "/";
     }
 
     return (
@@ -59,9 +64,9 @@ const Menu = ({ activeMenu, setActiveMenu }) => {
                 </div>
             </nav>
 
-            <div className={!isOpen && styles.hide} >
-                <div className={isOpen && styles.darkBG} onClick={() => setIsOpen(false)} />
-                <div className={isOpen && styles.centered}>
+            <div className={`${!isOpen && styles.hide}`} >
+                <div className={`${isOpen && styles.darkBG}`} onClick={() => setIsOpen(false)} />
+                <div className={`${isOpen && styles.centered}`}>
                     <div className={styles.modal}>
                         <div className={styles.modalHeader}>
                             <h5 className={styles.heading}>Sign in to Bilang IO</h5>

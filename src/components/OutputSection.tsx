@@ -1,8 +1,18 @@
 import axiosInstance from "../helpers/axiosInstance";
 import React, { useEffect, useState } from 'react';
 
-const OutputSection = ({ runpath, username }) => {
-    const [data, setData] = useState([]);
+type OutputSectionProps = {
+    runpath: string
+    username: string
+}
+
+type DataResponse = {
+    path: string
+    message: string
+}
+
+const OutputSection = ({ runpath, username }: OutputSectionProps) => {
+    const [data, setData] = useState<DataResponse>({path: "", message: ""});
     const [error, setError] = useState("");
 
     useEffect(() => {
@@ -46,8 +56,8 @@ const OutputSection = ({ runpath, username }) => {
                     <table className="table">
                         <thead>
                             <tr>
-                                <th width="10%">Exe Path</th>
-                                <td width="90%">{data.path}</td>
+                                <th style={{width: "10%"}}>Exe Path</th>
+                                <td style={{width: "90%"}}>{data.path}</td>
                             </tr>
                             <tr>
                                 <th>Output</th>
