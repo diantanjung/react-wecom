@@ -435,9 +435,10 @@ const DebugSection = () => {
                   ref={(el) => (fieldVar.current[key] = el)}
                   type="text"
                   name={key}
-                  defaultValue={local[key] || ""}
+                  value={local[key] || ""}
                   className="var-field"
                   style={{ width: "750px" }}
+                  readOnly
                 />
               </div>
             </div>
