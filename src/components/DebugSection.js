@@ -25,13 +25,11 @@ const DebugSection = () => {
 
   const ws = useRef();
 
-  console.log("aktifTabItem", aktifTabItem);
 
   // useLayoutEffect(() => {
 
   // }, [ws]);
 
-  console.log("aktifTabItem", aktifTabItem);
 
   useEffect(() => {
     ws.current = new WebSocket(url);
@@ -51,7 +49,7 @@ const DebugSection = () => {
 
   const goOnMessage = () => {
     ws.current.onmessage = function (evt) {
-      console.log(goValidLog(evt.data), evt.data);
+      console.log("goValidLog", goValidLog(evt.data), evt.data);
       if (goValidLog(evt.data)) {
         setLog([...log, evt.data.replace("(dlv) ", "")]);
       } else if (new RegExp(/^Command failed:/g).test(evt.data)) {
@@ -81,7 +79,6 @@ const DebugSection = () => {
         }
         dispatch(addFileItem(curPath)).then((res) => {
           if (res) {
-            console.log("res.payload.filepath : ", res.payload.filepath);
             dispatch(setCursor({ curPath: res.payload.filepath, curLine }));
           }
         });
@@ -93,7 +90,7 @@ const DebugSection = () => {
         for (let key in oldValue.current) {
           fieldVar.current[key].value = oldValue.current[key];
         }
-      } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data)) {
+      } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data) && ! new RegExp(/\[33m/g).test(evt.data)) {
         let temp = goGetVarVal(evt.data);
         setLocal((prev) => {
           return { ...prev, ...temp };
@@ -104,7 +101,6 @@ const DebugSection = () => {
 
   const rustOnMessage = () => {
     ws.current.onmessage = function (evt) {
-      console.log("rust log", rustValidLog(evt.data), evt.data);
       if (rustValidLog(evt.data)) {
         setLog([...log, evt.data]);
       } else if (
@@ -123,7 +119,6 @@ const DebugSection = () => {
         curPath = startDir + "/" + curPath;
         dispatch(addFileItem(curPath)).then((res) => {
           if (typeof res.payload.filepath !== "undefined") {
-            console.log("res.payload.filepath : ", res.payload.filepath);
             dispatch(setCursor({ curPath: res.payload.filepath, curLine }));
           } else {
             ws.current.send("finish");
@@ -290,7 +285,6 @@ const DebugSection = () => {
 
   const startDebug = (e) => {
     e.preventDefault();
-    // console.log("ws.current.readyState : ", ws.current.readyState);
     if (ws.current.readyState === 1 && ws.current) {
       dispatch(setStartDir({ startDir: aktifTabItem.dirpath }));
 
@@ -304,7 +298,6 @@ const DebugSection = () => {
       }
 
       if (aktifTabItem.language == "rust") {
-        console.log("start rust debugging");
         const rootFolder = aktifTabItem.dirpath.slice(0, -4);
         const projectName = rootFolder.split("/").pop();
         const targetDebug = rootFolder + "/target/debug/" + projectName;
