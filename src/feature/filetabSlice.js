@@ -124,7 +124,9 @@ const filetabSlice = createSlice({
             state.aktifTabItem.decorations = payload.decorations;
 
             const itemIndex = state.filetabItems.findIndex((item) => item.filepath === state.aktifTabItem.filepath);
-            state.filetabItems[itemIndex] = state.aktifTabItem;
+            if (itemIndex > -1){
+                state.filetabItems[itemIndex] = state.aktifTabItem;
+            }
         },
         setCursorDecoration: (state, { payload }) => {
             const curItem = state.filetabItems.find((item) => item.filepath === state.cursor.curPath);
