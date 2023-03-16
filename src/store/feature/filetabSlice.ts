@@ -2,16 +2,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../helpers/axiosInstance";
 import isAuthenticated from "../../utils/isAuthenticated";
 
-interface Decoration {
-  decoration: string;
-  classNama: string;
-}
-
 export interface FileTabItem {
   filepath: string;
   dirpath: string;
-  decorations: Decoration[];
-  breakpoints: number[];
+  bppos: number[];
+  bpln: number[];
   code: string;
   language: string;
 }
@@ -40,8 +35,8 @@ const initialState = {
   aktifTabItem: {
     filepath: "Untitled-1",
     dirpath: "",
-    decorations: [],
-    breakpoints: [],
+    bppos: [],
+    bpln: [],
     code: " ",
     language: "go",
   },
@@ -64,8 +59,8 @@ const filetabSlice = createSlice({
           state.filetabItems.push({
             filepath: payload.filepath,
             dirpath: payload.dirpath,
-            decorations: [],
-            breakpoints: [],
+            bppos: [],
+            bpln: [],
             code: payload.code,
             language: payload.language,
           });
@@ -73,8 +68,8 @@ const filetabSlice = createSlice({
           state.aktifTabItem = {
             filepath: payload.filepath,
             dirpath: payload.dirpath,
-            decorations: [],
-            breakpoints: [],
+            bppos: [],
+            bpln: [],
             code: payload.code,
             language: payload.language,
           };
@@ -90,8 +85,8 @@ const filetabSlice = createSlice({
           state.filetabItems.push({
             filepath: payload.filepath,
             dirpath: payload.dirpath,
-            decorations: [],
-            breakpoints: [],
+            bppos: [],
+            bpln: [],
             code: payload.code,
             language: payload.language,
           });
@@ -114,13 +109,13 @@ const filetabSlice = createSlice({
     },
     addBreakpoint: (state, { payload }) => {
       // const filetabItem = state.filetabItems.find((item) => item.filepath === payload.filepath);
-      if (state.aktifTabItem.breakpoints.indexOf(payload.line) === -1) {
-        state.aktifTabItem.breakpoints.push(payload.line);
+      if (state.aktifTabItem.bppos.indexOf(payload.bppos) === -1) {
+        state.aktifTabItem.bppos.push(payload.bppos);
       }
-      state.aktifTabItem.decorations[payload.line] = {
-        decoration: payload.decoration,
-        classNama: payload.classNama,
-      };
+
+      if (state.aktifTabItem.bpln.indexOf(payload.bpln) === -1) {
+        state.aktifTabItem.bpln.push(payload.bpln);
+      }
 
       const itemIndex = state.filetabItems.findIndex(
         (item) => item.filepath === state.aktifTabItem.filepath
@@ -128,13 +123,13 @@ const filetabSlice = createSlice({
       state.filetabItems[itemIndex] = state.aktifTabItem;
     },
     removeBreakpoint: (state, { payload }) => {
-      state.aktifTabItem.breakpoints = state.aktifTabItem.breakpoints.filter(
-        (item) => item !== payload.line
+      state.aktifTabItem.bppos = state.aktifTabItem.bppos.filter(
+        (item) => item !== payload.bppos
       );
-      state.aktifTabItem.decorations[payload.line] = {
-        decoration: payload.decoration,
-        classNama: payload.classNama,
-      };
+
+      state.aktifTabItem.bpln = state.aktifTabItem.bpln.filter(
+        (item) => item !== payload.bpln
+      );
 
       const itemIndex = state.filetabItems.findIndex(
         (item) => item.filepath === state.aktifTabItem.filepath
@@ -142,10 +137,6 @@ const filetabSlice = createSlice({
       state.filetabItems[itemIndex] = state.aktifTabItem;
     },
     setDecoration: (state, { payload }) => {
-      state.aktifTabItem.decorations[payload.line] = {
-        decoration: payload.decoration,
-        classNama: payload.classNama,
-      };
 
       const itemIndex = state.filetabItems.findIndex(
         (item) => item.filepath === state.aktifTabItem.filepath
@@ -153,33 +144,10 @@ const filetabSlice = createSlice({
       state.filetabItems[itemIndex] = state.aktifTabItem;
     },
     setDecorations: (state, { payload }) => {
-      state.aktifTabItem.decorations = payload.decorations;
-
       const itemIndex = state.filetabItems.findIndex(
         (item) => item.filepath === state.aktifTabItem.filepath
       );
       state.filetabItems[itemIndex] = state.aktifTabItem;
-    },
-    setCursorDecoration: (state, { payload }) => {
-      const curItem = state.filetabItems.find(
-        (item) => item.filepath === state.cursor.curPath
-      );
-      if (typeof curItem !== "undefined") {
-        curItem.decorations[state.cursor.curLine] = {
-          decoration: payload.curDecor,
-          classNama: "currentBp",
-        };
-      }
-
-      const lastItem = state.filetabItems.find(
-        (item) => item.filepath === state.cursor.lastPath
-      );
-      if (typeof lastItem !== "undefined") {
-        lastItem.decorations[state.cursor.lastLine] = {
-          decoration: payload.lastDecor,
-          classNama: payload.lastClassNama,
-        };
-      }
     },
     setCursor: (state, { payload }) => {
       state.cursor.lastPath = state.cursor.curPath;
@@ -211,8 +179,8 @@ const filetabSlice = createSlice({
           state.filetabItems.push({
             filepath: payload.filepath,
             dirpath: payload.dirpath,
-            decorations: [],
-            breakpoints: [],
+            bppos: [],
+            bpln: [],
             code: payload.file_str,
             language: payload.language,
           });
@@ -220,8 +188,8 @@ const filetabSlice = createSlice({
           state.aktifTabItem = {
             filepath: payload.filepath,
             dirpath: payload.dirpath,
-            decorations: [],
-            breakpoints: [],
+            bppos: [],
+            bpln: [],
             code: payload.file_str,
             language: payload.language,
           };
@@ -265,7 +233,6 @@ export const {
   addBreakpoint,
   removeBreakpoint,
   setDecoration,
-  setCursorDecoration,
   setDecorations,
   setCursor,
   clearCursor,
