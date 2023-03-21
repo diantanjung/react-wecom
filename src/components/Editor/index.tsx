@@ -22,6 +22,8 @@ import {
   lineNumbers,
   gutter,
   GutterMarker,
+  ViewPlugin,
+  ViewUpdate
 } from "@codemirror/view";
 import {
   StreamLanguage,
@@ -45,8 +47,12 @@ const breakpointMarker = new (class extends GutterMarker {
 })();
 
 //cursor
-const cursorEffect = StateEffect.define<{ pos: number; on: boolean }>({
-  map: (val, mapping) => ({ pos: mapping.mapPos(val.pos), on: val.on }),
+const cursorEffect = StateEffect.define<{ curpos: number; lastpos: number, on:boolean }>({
+  map: (val, mapping) => ({
+    curpos: mapping.mapPos(val.curpos),
+    lastpos: mapping.mapPos(val.lastpos),
+    on: val.on
+  }),
 });
 
 const cursorMarker = new (class extends GutterMarker {
@@ -71,6 +77,7 @@ const breakpointLoadEffect = StateEffect.define<{ pos: number[] }>({
 // const breakpointLoadEffect2 = StateEffect.define<{ bp: Breakpoint[] }>({
 //   map: (val, mapping) => ({ bp: val.bp.map( item => ({pos: mapping.mapPos(item.pos), linenumber:item.linenumber} as Breakpoint) ) }),
 // });
+
 
 export const Editor = () => {
   const editorRef = React.useRef<HTMLElement>(null);
@@ -98,14 +105,16 @@ export const Editor = () => {
             }
 
             if (e.is(cursorEffect)) {
-              if (e.value.on)
-                set = set.update({ add: [cursorMarker.range(e.value.pos)] });
-              else {
-                set = set.update({
-                  filter: (from) => from != e.value.pos,
-                  add: [cursorMarker.range(e.value.pos)],
-                });
+              let addMarker = [cursorMarker.range(e.value.curpos)];
+              if (e.value.lastpos > 0 && e.value.on) {
+                  addMarker.unshift(breakpointMarker.range(e.value.lastpos));
               }
+
+              set = set.update({
+                filter: (from) =>
+                  from != e.value.curpos && from != e.value.lastpos,
+                add: addMarker,
+              });
             }
 
             if (e.is(breakpointLoadEffect)) {
@@ -121,17 +130,30 @@ export const Editor = () => {
     []
   );
 
-  const toggleCursor = (view: EditorView, pos: number) => {
-    let breakpoints = view.state.field(breakpointState);
+  const toggleCursor = (
+    view: EditorView,
+    currentLn: number,
+    lastLn: number
+  ) => {
+    console.log("currentLn lastLn", currentLn, lastLn);
+    
+    if (currentLn < 1) return false;
+    const curPos = view.state.doc.line(currentLn).from;
+    let lastPos = -1;
     let hasBreakpoint = false;
-    breakpoints.between(pos, pos, (from, to, value) => {
-      console.log("value : ", value);
-
-      hasBreakpoint = true;
-    });
+    if (lastLn > 0) {
+      lastPos = view.state.doc.line(lastLn).from;
+      hasBreakpoint = aktifTabItem.bppos.includes(lastPos);
+    }
+    console.log("curPos lastpos hasBreakpoint", curPos, lastPos, hasBreakpoint);
     view.dispatch({
-      effects: cursorEffect.of({ pos, on: !hasBreakpoint }),
+      effects: [cursorEffect.of({ curpos: curPos, lastpos: lastPos, on: hasBreakpoint }), EditorView.scrollIntoView(curPos, {
+        y: 'center',
+      }), ],
+      selection: {anchor:curPos, head: curPos},
+      // scrollIntoView: true
     });
+    view.focus();
   };
 
   function toggleBreakpoint(view: EditorView, pos: number) {
@@ -177,8 +199,8 @@ export const Editor = () => {
       initialSpacer: () => breakpointMarker,
       domEventHandlers: {
         mousedown(view, line) {
-          if (view.state.doc.lineAt(line.from).number !== 1)
-            toggleBreakpoint(view, line.from);
+          // if (view.state.doc.lineAt(line.from).number == cursor.curLine)
+          toggleBreakpoint(view, line.from);
           return true;
         },
       },
@@ -288,22 +310,15 @@ export const Editor = () => {
 
     view.setState(activeState);
 
-    // view.dispatch({
-    //   changes: {
-    //     from: 0,
-    //     to: view.state.doc.length,
-    //     insert: aktifTabItem.code,
-    //   },
-    // });
-    console.log("loadBreakpoint!!!");
     loadBreakpoint(view, aktifTabItem.bppos);
-    // console.log("test", view.state.doc.lineAt(0));
   }, [aktifTabItem.code]);
 
-  const clickTest = () => {
+  useEffect(() => {
     if (view === null) return;
-    loadBreakpoint(view, aktifTabItem.bppos);
-  };
+    // console.log("pos", view.state.doc.line(10).from, line.from);
+    // toggleCursor(view, view.state.doc.line(cursor.curLine).from, view.state.doc.line(cursor.lastLine).from);
+    toggleCursor(view, cursor.curLine, cursor.lastLine);
+  }, [cursor.curPath, cursor.curLine]);
 
   return (
     <>
@@ -353,9 +368,6 @@ export const Editor = () => {
             </a>
           </li>
         )}
-        <li>
-          <a onClick={() => clickTest()}>Click Test</a>
-        </li>
       </ul>
       <br />
       <section ref={editorRef} />

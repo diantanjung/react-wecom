@@ -91,7 +91,7 @@ const DebugSection = () => {
         for (let key in oldValue.current) {
           fieldVar.current[key].value = oldValue.current[key];
         }
-      } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data)) {
+      } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data) && ! new RegExp(/\[33m/g).test(evt.data)) {
         let temp = goGetVarVal(evt.data);
         setLocal((prev) => {
           return { ...prev, ...temp };
@@ -128,7 +128,7 @@ const DebugSection = () => {
           }
         });
         ws.current.send("v");
-      } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data)) {
+      } else if (new RegExp(/[a-zA-Z\d_]+ = .+/g).test(evt.data) && ! new RegExp(/\[33m/g).test(evt.data)) {
         let temp = rustGetVarVal(evt.data);
         setLocal((prev) => {
           return { ...prev, ...temp };
@@ -262,7 +262,7 @@ const DebugSection = () => {
         ws.current.send("exit");
         ws.current.send("cd " + aktifTabItem.dirpath);
         ws.current.send("dlv debug --allow-non-terminal-interactive=true");
-        aktifTabItem.breakpoints.forEach((val) => {
+        aktifTabItem.bpln.forEach((val) => {
           ws.current.send("break " + aktifTabItem.filepath + ":" + val);
         });
         ws.current.send("continue");
@@ -277,7 +277,7 @@ const DebugSection = () => {
         ws.current.send("cargo build");
         ws.current.send("lldb " + targetDebug);
         ws.current.send("settings set auto-confirm 1");
-        aktifTabItem.breakpoints.forEach((val) => {
+        aktifTabItem.bpln.forEach((val) => {
           ws.current.send("b " + aktifTabItem.filepath + ":" + val);
         });
         ws.current.send("run");
@@ -295,7 +295,7 @@ const DebugSection = () => {
       if (aktifTabItem.language == "go") {
         ws.current.send("cd " + aktifTabItem.dirpath);
         ws.current.send("dlv debug --allow-non-terminal-interactive=true");
-        aktifTabItem.breakpoints.forEach((val) => {
+        aktifTabItem.bpln.forEach((val) => {
           ws.current.send("break " + aktifTabItem.filepath + ":" + val);
         });
         ws.current.send("continue");
@@ -310,7 +310,7 @@ const DebugSection = () => {
         ws.current.send("cargo build");
         ws.current.send("lldb " + targetDebug);
         ws.current.send("settings set auto-confirm 1");
-        aktifTabItem.breakpoints.forEach((val) => {
+        aktifTabItem.bpln.forEach((val) => {
           ws.current.send("b " + aktifTabItem.filepath + ":" + val);
         });
         ws.current.send("run");
@@ -431,7 +431,7 @@ const DebugSection = () => {
                   ref={(el) => (fieldVar.current[key] = el)}
                   type="text"
                   name={key}
-                  defaultValue={local[key] || ""}
+                  value={local[key] || ""}
                   className="var-field"
                   style={{ width: "750px" }}
                 />
