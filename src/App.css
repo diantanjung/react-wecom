@@ -34,14 +34,14 @@ html {
   height: 100vh;
   width: 50%;
   padding: 10px;
-  overflow: hidden;
+  overflow: scroll;
 }
 
 .full {
   height: 100vh;
   width: 100%;
   padding: 10px;
-  overflow: hidden;
+  overflow: scroll;
 }
 
 .hilang {

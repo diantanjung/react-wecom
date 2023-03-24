@@ -147,9 +147,11 @@ export const Editor = () => {
     }
     console.log("curPos lastpos hasBreakpoint", curPos, lastPos, hasBreakpoint);
     view.dispatch({
-      effects: [cursorEffect.of({ curpos: curPos, lastpos: lastPos, on: hasBreakpoint }), EditorView.scrollIntoView(curPos, {
-        y: 'center',
-      }), ],
+      effects: [cursorEffect.of({ curpos: curPos, lastpos: lastPos, on: hasBreakpoint }), 
+        EditorView.scrollIntoView(curPos, {
+          y: 'center',
+        }), 
+      ],
       selection: {anchor:curPos, head: curPos},
       // scrollIntoView: true
     });
