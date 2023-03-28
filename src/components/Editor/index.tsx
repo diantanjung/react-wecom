@@ -23,7 +23,7 @@ import {
   gutter,
   GutterMarker,
   ViewPlugin,
-  ViewUpdate
+  ViewUpdate,
 } from "@codemirror/view";
 import {
   StreamLanguage,
@@ -40,6 +40,8 @@ import { useSelector } from "react-redux";
 //   setView: (view: EditorView | null) => void;
 // };
 
+const editorCache = new Map();
+
 const breakpointMarker = new (class extends GutterMarker {
   toDOM() {
     return document.createTextNode("🔴");
@@ -47,11 +49,15 @@ const breakpointMarker = new (class extends GutterMarker {
 })();
 
 //cursor
-const cursorEffect = StateEffect.define<{ curpos: number; lastpos: number, on:boolean }>({
+const cursorEffect = StateEffect.define<{
+  curpos: number;
+  lastpos: number;
+  on: boolean;
+}>({
   map: (val, mapping) => ({
     curpos: mapping.mapPos(val.curpos),
     lastpos: mapping.mapPos(val.lastpos),
-    on: val.on
+    on: val.on,
   }),
 });
 
@@ -78,10 +84,10 @@ const breakpointLoadEffect = StateEffect.define<{ pos: number[] }>({
 //   map: (val, mapping) => ({ bp: val.bp.map( item => ({pos: mapping.mapPos(item.pos), linenumber:item.linenumber} as Breakpoint) ) }),
 // });
 
-
 export const Editor = () => {
   const editorRef = React.useRef<HTMLElement>(null);
-  const [view, setView] = React.useState<EditorView | null>(null);
+  // const [view, setView] = React.useState<EditorView | null>(null);
+  const [viewa, setViewa] = React.useState<Map<string, EditorView>>(new Map());
   const { filetabItems, cursor, aktifTabItem } = useAppSelector(
     (store) => store.filetabs
   );
@@ -107,7 +113,7 @@ export const Editor = () => {
             if (e.is(cursorEffect)) {
               let addMarker = [cursorMarker.range(e.value.curpos)];
               if (e.value.lastpos > 0 && e.value.on) {
-                  addMarker.unshift(breakpointMarker.range(e.value.lastpos));
+                addMarker.unshift(breakpointMarker.range(e.value.lastpos));
               }
 
               set = set.update({
@@ -136,7 +142,7 @@ export const Editor = () => {
     lastLn: number
   ) => {
     console.log("currentLn lastLn", currentLn, lastLn);
-    
+
     if (currentLn < 1) return false;
     const curPos = view.state.doc.line(currentLn).from;
     let lastPos = -1;
@@ -147,12 +153,17 @@ export const Editor = () => {
     }
     console.log("curPos lastpos hasBreakpoint", curPos, lastPos, hasBreakpoint);
     view.dispatch({
-      effects: [cursorEffect.of({ curpos: curPos, lastpos: lastPos, on: hasBreakpoint }), 
+      effects: [
+        cursorEffect.of({
+          curpos: curPos,
+          lastpos: lastPos,
+          on: hasBreakpoint,
+        }),
         EditorView.scrollIntoView(curPos, {
-          y: 'center',
-        }), 
+          y: "center",
+        }),
       ],
-      selection: {anchor:curPos, head: curPos},
+      selection: { anchor: curPos, head: curPos },
       // scrollIntoView: true
     });
     view.focus();
@@ -282,44 +293,97 @@ export const Editor = () => {
     []
   );
 
+  const getEditor = () => {
+    let editor = editorCache.get(aktifTabItem.filepath);
+    if (!editor) {
+      // Cache miss --> mint a new editor.
+      editor = new EditorView({
+        state: EditorState.create({
+          doc: aktifTabItem.code,
+          extensions,
+        }),
+      });
+
+      // Populate the cache.
+      editorCache.set(aktifTabItem.filepath, editor);
+    }
+
+    return editor;
+  };
+
   useEffect(() => {
     if (editorRef.current === null) return;
 
-    const EdView = new EditorView({
-      state: EditorState.create({
-        doc: aktifTabItem.code,
-        extensions,
-      }),
-      parent: editorRef.current,
-    });
+    let editor = editorCache.get(aktifTabItem.filepath);
+    if (!editor) {
+      // Cache miss --> mint a new editor.
+      editor = new EditorView({
+        state: EditorState.create({
+          doc: aktifTabItem.code,
+          extensions,
+        }),
+      });
 
-    setView(EdView);
+      // Populate the cache.
+      editorCache.set(aktifTabItem.filepath, editor);
+    }
+
+    // const EdView = new EditorView({
+    //   state: EditorState.create({
+    //     doc: aktifTabItem.code,
+    //     extensions,
+    //   }),
+    //   parent: editorRef.current,
+    // });
+
+    editorRef.current.appendChild(editor.dom);
+    loadBreakpoint(editor, aktifTabItem.bppos);
+
+    // setView(editor);
 
     return () => {
-      EdView.destroy();
-      setView(null);
+      // setView(null);
+      if (editorRef.current === null) return;
+      editorRef.current.removeChild(editor.dom);
     };
-  }, [editorRef.current]);
+  }, [editorRef.current, aktifTabItem.code]);
+
+  // useEffect(() => {
+  //   if (editorRef.current === null) return;
+  //   console.log("code changed", view);
+  //   if (view === null) return;
+
+  //   let editor = editorCache.get(aktifTabItem.filepath);
+  //   if (!editor) {
+  //     // Cache miss --> mint a new editor.
+  //     editor = new EditorView({
+  //       state: EditorState.create({
+  //         doc: aktifTabItem.code,
+  //         extensions,
+  //       }),
+  //     });
+
+  //     // Populate the cache.
+  //     editorCache.set(aktifTabItem.filepath, editor);
+  //   }
+
+  //   editorRef.current.appendChild(editor.dom);
+
+  //   setView(editor);
+
+  //   loadBreakpoint(view, aktifTabItem.bppos);
+
+  //   return () => {
+  //     setView(null);
+  //   };
+  // }, [aktifTabItem.code]);
 
   useEffect(() => {
-    console.log("code changed", view);
-    if (view === null) return;
-
-    let activeState = EditorState.create({
-      doc: aktifTabItem.code,
-      extensions,
-    });
-
-    view.setState(activeState);
-
-    loadBreakpoint(view, aktifTabItem.bppos);
-  }, [aktifTabItem.code]);
-
-  useEffect(() => {
-    if (view === null) return;
+    // if (view === null) return;
     // console.log("pos", view.state.doc.line(10).from, line.from);
     // toggleCursor(view, view.state.doc.line(cursor.curLine).from, view.state.doc.line(cursor.lastLine).from);
-    toggleCursor(view, cursor.curLine, cursor.lastLine);
+    let editor = editorCache.get(aktifTabItem.filepath);
+    toggleCursor(editor, cursor.curLine, cursor.lastLine);
   }, [cursor.curPath, cursor.curLine]);
 
   return (
