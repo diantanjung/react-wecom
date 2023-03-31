@@ -77,12 +77,14 @@ const DebugSection = () => {
         if (curPath.indexOf("./") !== -1) {
           curPath = startDir + "/" + curPath;
         }
-        dispatch(addFileItem(curPath)).then((res) => {
-          if (res) {
-            console.log("res.payload.filepath : ", res.payload.filepath);
-            dispatch(setCursor({ curPath: res.payload.filepath, curLine }));
-          }
-        });
+        // dispatch(addFileItem(curPath)).then((res) => {
+        //   if (res) {
+        //     console.log("curPath ", curPath);
+        //     dispatch(setCursor({ curPath: res.payload.filepath, curLine }));
+        //   }
+        // });
+        dispatch(setCursor({ curPath: curPath, curLine }));
+
         ws.current.send("locals");
       } else if (new RegExp(/^Command failed:/g).test(evt.data)) {
         setError(evt.data);
@@ -434,6 +436,7 @@ const DebugSection = () => {
                   value={local[key] || ""}
                   className="var-field"
                   style={{ width: "750px" }}
+                  readOnly
                 />
               </div>
             </div>

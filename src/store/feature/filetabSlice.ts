@@ -149,12 +149,12 @@ const filetabSlice = createSlice({
       );
       state.filetabItems[itemIndex] = state.aktifTabItem;
     },
-    setCursor: (state, { payload }) => {
-      state.cursor.lastPath = state.cursor.curPath;
-      state.cursor.lastLine = state.cursor.curLine;
-      state.cursor.curPath = payload.curPath;
-      state.cursor.curLine = payload.curLine;
-    },
+    // setCursor: (state, { payload }) => {
+    //   state.cursor.lastPath = state.cursor.curPath;
+    //   state.cursor.lastLine = state.cursor.curLine;
+    //   state.cursor.curPath = payload.curPath;
+    //   state.cursor.curLine = payload.curLine;
+    // },
     clearCursor: (state, { payload }) => {
       state.cursor.lastPath = state.cursor.curPath;
       state.cursor.lastLine = state.cursor.curLine;
@@ -167,6 +167,42 @@ const filetabSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(addFileItem.fulfilled, (state, { payload }) => {
+      if (state.aktifTabItem.filepath !== payload.filepath) {
+        const isExist = state.filetabItems.find(
+          (item) => item.filepath === payload.filepath
+        );
+        if (isExist) {
+          state.aktifTabItem = state.filetabItems.find(
+            (item) => item.filepath === payload.filepath
+          ) as FileTabItem;
+        } else {
+          state.filetabItems.push({
+            filepath: payload.filepath,
+            dirpath: payload.dirpath,
+            bppos: [],
+            bpln: [],
+            code: payload.file_str,
+            language: payload.language,
+          });
+
+          state.aktifTabItem = {
+            filepath: payload.filepath,
+            dirpath: payload.dirpath,
+            bppos: [],
+            bpln: [],
+            code: payload.file_str,
+            language: payload.language,
+          };
+        }
+      }
+    });
+
+    builder.addCase(setCursor.fulfilled, (state, { payload }) => {
+      state.cursor.lastPath = state.cursor.curPath;
+      state.cursor.lastLine = state.cursor.curLine;
+      state.cursor.curPath = payload.filepath;
+      state.cursor.curLine = payload.curLine;
+
       if (state.aktifTabItem.filepath !== payload.filepath) {
         const isExist = state.filetabItems.find(
           (item) => item.filepath === payload.filepath
@@ -209,6 +245,7 @@ export const addFileItem = createAsyncThunk(
           "/opendirfile",
           JSON.stringify({ path_str: filepath, username: username })
         );
+        
         return resp.data;
       } else {
         const resp = await axiosInstance().post(
@@ -216,6 +253,39 @@ export const addFileItem = createAsyncThunk(
           JSON.stringify({ path_str: filepath, username: "guest" })
         );
         // const data = resp.data.json();
+        return resp.data;
+      }
+    } catch (error) {
+      return thunkAPI.rejectWithValue("something went wrong");
+    }
+  }
+);
+
+interface setCursorParams {
+  curPath: string
+  curLine: number
+}
+
+export const setCursor = createAsyncThunk(
+  "filetabs/setCursor",
+  async (params: setCursorParams, thunkAPI) => {
+    try {
+      const {curPath, curLine} = params;
+      if (isAuthenticated()) {
+        const username = localStorage.username || "guest";
+        const resp = await axiosInstance().post(
+          "/opendirfile",
+          JSON.stringify({ path_str: curPath, username: username })
+        );
+        resp.data.curLine = curLine;
+        return resp.data;
+      } else {
+        const resp = await axiosInstance().post(
+          "/gopendirfile",
+          JSON.stringify({ path_str: curPath, username: "guest" })
+        );
+        // const data = resp.data.json();
+        resp.data.curLine = curLine;
         return resp.data;
       }
     } catch (error) {
@@ -234,7 +304,7 @@ export const {
   removeBreakpoint,
   setDecoration,
   setDecorations,
-  setCursor,
+  // setCursor,
   clearCursor,
   setStartDir,
 } = filetabSlice.actions;

@@ -34,12 +34,6 @@ import { tags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
 import { useSelector } from "react-redux";
 
-// import { extensions, toggleCursor } from "./extensions";
-
-// type EditorProps = {
-//   setView: (view: EditorView | null) => void;
-// };
-
 const editorCache = new Map();
 
 const breakpointMarker = new (class extends GutterMarker {
@@ -48,17 +42,12 @@ const breakpointMarker = new (class extends GutterMarker {
   }
 })();
 
-//cursor
-const cursorEffect = StateEffect.define<{
-  curpos: number;
-  lastpos: number;
-  on: boolean;
-}>({
-  map: (val, mapping) => ({
-    curpos: mapping.mapPos(val.curpos),
-    lastpos: mapping.mapPos(val.lastpos),
-    on: val.on,
-  }),
+const cursorCurEffect = StateEffect.define<{ curpos: number }>({
+  map: (val, mapping) => ({ curpos: mapping.mapPos(val.curpos) }),
+});
+
+const cursorLastEffect = StateEffect.define<{ lastpos: number; on: boolean }>({
+  map: (val, mapping) => ({ lastpos: mapping.mapPos(val.lastpos), on: val.on }),
 });
 
 const cursorMarker = new (class extends GutterMarker {
@@ -87,7 +76,7 @@ const breakpointLoadEffect = StateEffect.define<{ pos: number[] }>({
 export const Editor = () => {
   const editorRef = React.useRef<HTMLElement>(null);
   // const [view, setView] = React.useState<EditorView | null>(null);
-  const [viewa, setViewa] = React.useState<Map<string, EditorView>>(new Map());
+  const [views, setViews] = React.useState<Map<string, EditorView>>();
   const { filetabItems, cursor, aktifTabItem } = useAppSelector(
     (store) => store.filetabs
   );
@@ -103,6 +92,7 @@ export const Editor = () => {
           set = set.map(transaction.changes);
           for (let e of transaction.effects) {
             if (e.is(breakpointClickEffect)) {
+              console.log("run breakpointClickEffect");
               if (e.value.on)
                 set = set.update({
                   add: [breakpointMarker.range(e.value.pos)],
@@ -110,20 +100,30 @@ export const Editor = () => {
               else set = set.update({ filter: (from) => from != e.value.pos });
             }
 
-            if (e.is(cursorEffect)) {
-              let addMarker = [cursorMarker.range(e.value.curpos)];
-              if (e.value.lastpos > 0 && e.value.on) {
-                addMarker.unshift(breakpointMarker.range(e.value.lastpos));
-              }
+            if (e.is(cursorCurEffect)) {
+              console.log("run cursorCurEffect");
+              // if (e.value.lastpos > 0 && e.value.on) {
+              //   addMarker.unshift(breakpointMarker.range(e.value.lastpos));
+              // }
 
               set = set.update({
-                filter: (from) =>
-                  from != e.value.curpos && from != e.value.lastpos,
-                add: addMarker,
+                filter: (from) => from != e.value.curpos,
+                add: [cursorMarker.range(e.value.curpos)],
+              });
+            }
+
+            if (e.is(cursorLastEffect)) {
+              console.log("run cursorLastEffect");
+              set = set.update({
+                filter: (from) => from != e.value.lastpos,
+                add: e.value.on
+                  ? [breakpointMarker.range(e.value.lastpos)]
+                  : [],
               });
             }
 
             if (e.is(breakpointLoadEffect)) {
+              console.log("run breakpointLoadEffect");
               set = set.update({
                 filter: (from) => !e.value.pos.includes(from),
                 add: e.value.pos.map((item) => breakpointMarker.range(item)),
@@ -136,38 +136,38 @@ export const Editor = () => {
     []
   );
 
-  const toggleCursor = (
-    view: EditorView,
-    currentLn: number,
-    lastLn: number
-  ) => {
-    console.log("currentLn lastLn", currentLn, lastLn);
+  // const toggleCursor = (
+  //   view: EditorView,
+  //   currentLn: number,
+  //   lastLn: number
+  // ) => {
+  //   console.log("currentLn lastLn", currentLn, lastLn);
 
-    if (currentLn < 1) return false;
-    const curPos = view.state.doc.line(currentLn).from;
-    let lastPos = -1;
-    let hasBreakpoint = false;
-    if (lastLn > 0) {
-      lastPos = view.state.doc.line(lastLn).from;
-      hasBreakpoint = aktifTabItem.bppos.includes(lastPos);
-    }
-    console.log("curPos lastpos hasBreakpoint", curPos, lastPos, hasBreakpoint);
-    view.dispatch({
-      effects: [
-        cursorEffect.of({
-          curpos: curPos,
-          lastpos: lastPos,
-          on: hasBreakpoint,
-        }),
-        EditorView.scrollIntoView(curPos, {
-          y: "center",
-        }),
-      ],
-      selection: { anchor: curPos, head: curPos },
-      // scrollIntoView: true
-    });
-    view.focus();
-  };
+  //   if (currentLn < 1) return false;
+  //   const curPos = view.state.doc.line(currentLn).from;
+  //   let lastPos = -1;
+  //   let hasBreakpoint = false;
+  //   if (lastLn > 0) {
+  //     lastPos = view.state.doc.line(lastLn).from;
+  //     hasBreakpoint = aktifTabItem.bppos.includes(lastPos);
+  //   }
+  //   console.log("curPos lastpos hasBreakpoint", curPos, lastPos, hasBreakpoint);
+  //   view.dispatch({
+  //     effects: [
+  //       cursorEffect.of({
+  //         curpos: curPos,
+  //         lastpos: lastPos,
+  //         on: hasBreakpoint,
+  //       }),
+  //       EditorView.scrollIntoView(curPos, {
+  //         y: "center",
+  //       }),
+  //     ],
+  //     selection: { anchor: curPos, head: curPos },
+  //     // scrollIntoView: true
+  //   });
+  //   view.focus();
+  // };
 
   function toggleBreakpoint(view: EditorView, pos: number) {
     let breakpoints = view.state.field(breakpointState);
@@ -293,23 +293,23 @@ export const Editor = () => {
     []
   );
 
-  const getEditor = () => {
-    let editor = editorCache.get(aktifTabItem.filepath);
-    if (!editor) {
-      // Cache miss --> mint a new editor.
-      editor = new EditorView({
-        state: EditorState.create({
-          doc: aktifTabItem.code,
-          extensions,
-        }),
-      });
+  // const getEditor = () => {
+  //   let editor = editorCache.get(aktifTabItem.filepath);
+  //   if (!editor) {
+  //     // Cache miss --> mint a new editor.
+  //     editor = new EditorView({
+  //       state: EditorState.create({
+  //         doc: aktifTabItem.code,
+  //         extensions,
+  //       }),
+  //     });
 
-      // Populate the cache.
-      editorCache.set(aktifTabItem.filepath, editor);
-    }
+  //     // Populate the cache.
+  //     editorCache.set(aktifTabItem.filepath, editor);
+  //   }
 
-    return editor;
-  };
+  //   return editor;
+  // };
 
   useEffect(() => {
     if (editorRef.current === null) return;
@@ -328,63 +328,74 @@ export const Editor = () => {
       editorCache.set(aktifTabItem.filepath, editor);
     }
 
-    // const EdView = new EditorView({
-    //   state: EditorState.create({
-    //     doc: aktifTabItem.code,
-    //     extensions,
-    //   }),
-    //   parent: editorRef.current,
-    // });
-
     editorRef.current.appendChild(editor.dom);
     loadBreakpoint(editor, aktifTabItem.bppos);
 
-    // setView(editor);
-
     return () => {
-      // setView(null);
       if (editorRef.current === null) return;
       editorRef.current.removeChild(editor.dom);
     };
   }, [editorRef.current, aktifTabItem.code]);
 
-  // useEffect(() => {
-  //   if (editorRef.current === null) return;
-  //   console.log("code changed", view);
-  //   if (view === null) return;
-
-  //   let editor = editorCache.get(aktifTabItem.filepath);
-  //   if (!editor) {
-  //     // Cache miss --> mint a new editor.
-  //     editor = new EditorView({
-  //       state: EditorState.create({
-  //         doc: aktifTabItem.code,
-  //         extensions,
-  //       }),
-  //     });
-
-  //     // Populate the cache.
-  //     editorCache.set(aktifTabItem.filepath, editor);
-  //   }
-
-  //   editorRef.current.appendChild(editor.dom);
-
-  //   setView(editor);
-
-  //   loadBreakpoint(view, aktifTabItem.bppos);
-
-  //   return () => {
-  //     setView(null);
-  //   };
-  // }, [aktifTabItem.code]);
-
   useEffect(() => {
-    // if (view === null) return;
     // console.log("pos", view.state.doc.line(10).from, line.from);
     // toggleCursor(view, view.state.doc.line(cursor.curLine).from, view.state.doc.line(cursor.lastLine).from);
-    let editor = editorCache.get(aktifTabItem.filepath);
-    toggleCursor(editor, cursor.curLine, cursor.lastLine);
+    const curEditor = editorCache.get(cursor.curPath);
+    const lastEditor = editorCache.get(cursor.lastPath);
+
+    if (cursor.curLine < 1) return;
+    const curPos = curEditor.state.doc.line(cursor.curLine).from;
+
+    if (lastEditor) {
+      let lastPos = -1;
+      let hasBreakpoint = false;
+      if (cursor.lastLine > 0) {
+        lastPos = lastEditor.state.doc.line(cursor.lastLine).from;
+        const lastItem = filetabItems.find(
+          (item) => item.filepath === cursor.lastPath
+        );
+        if(lastItem){
+          hasBreakpoint = lastItem.bppos.includes(lastPos);
+          console.log("dispatch last editor", cursor.lastPath, cursor.lastLine, hasBreakpoint);
+          
+          lastEditor.dispatch({
+            effects: [
+              cursorLastEffect.of({
+                lastpos: lastPos,
+                on: hasBreakpoint,
+              }),
+            ],
+          });
+        }
+      }
+    }
+
+    curEditor.dispatch({
+      effects: [
+        cursorCurEffect.of({
+          curpos: curPos,
+        }),
+        EditorView.scrollIntoView(curPos, {
+          y: "center",
+        }),
+      ],
+      selection: { anchor: curPos, head: curPos },
+      // scrollIntoView: true
+    });
+    curEditor.focus();
   }, [cursor.curPath, cursor.curLine]);
+
+  const testklik = () => {
+    let curEditor = editorCache.get(aktifTabItem.filepath);
+
+    if(curEditor == null) {
+      console.log("curEditor nya NULL");
+      return;
+    }
+    curEditor.dispatch({
+      effects: cursorCurEffect.of({ curpos: 91 }),
+    }); 
+  }
 
   return (
     <>
