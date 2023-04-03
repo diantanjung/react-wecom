@@ -16,7 +16,7 @@ interface customWindow extends Window {
 declare const window: customWindow;
 
 const Home = ({ username, setUsername }: HomeProps) => {
-  const [activeMenu, setActiveMenu] = useState("files");
+  const [activeMenu, setActiveMenu] = useState("open");
 
   const [filepath, setFilepath] = useState("");
   const [dirpath, setDirpath] = useState("");

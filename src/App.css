@@ -8173,7 +8173,7 @@ a.text-dark:hover, a.text-dark:focus {
 
 body {
   font-family: "Poppins", Arial, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1.8;
   font-weight: normal;
   background: #fff;
@@ -8264,13 +8264,13 @@ h1, h2, h3, h4, h5,
     max-width: 80px;
     text-align: center; }
     #sidebar.active ul.components li {
-      font-size: 14px; }
+      font-size: 12px; }
       #sidebar.active ul.components li a {
         padding: 10px 0; }
         #sidebar.active ul.components li a span {
           margin-right: 0;
           display: block;
-          font-size: 24px; }
+          font-size: 14px; }
     #sidebar.active .logo {
       padding: 10px 0; }
     #sidebar.active .footer {
