@@ -33,12 +33,11 @@ const Menu = ({ activeMenu, setActiveMenu }: MenuProps) => {
                                 <a onClick={() => setIsOpen(true)}><span className="fa fa-sign-in"></span>Login</a>
                             </li>
                     }
-
-                    <li className={activeMenu == 'files' ? "active" : ""}>
-                        <a onClick={() => setActiveMenu('files')}><span className="fa fa-folder"></span>Files</a>
-                    </li>
                     <li className={activeMenu == 'open' ? "active" : ""}>
                         <a onClick={() => setActiveMenu('open')}><span className="fa fa-file"></span>Open</a>
+                    </li>
+                    <li className={activeMenu == 'files' ? "active" : ""}>
+                        <a onClick={() => setActiveMenu('files')}><span className="fa fa-folder"></span>Files</a>
                     </li>
                     <li className={activeMenu == 'terminal' ? "active" : ""}>
                         <a onClick={() => setActiveMenu('terminal')}><span className="fa fa-terminal"></span>Terminal</a>
