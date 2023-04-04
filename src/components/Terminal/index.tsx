@@ -176,5 +176,12 @@ export function Terminal({ setTerminal, filepath, dirpath, activeMenu }: termina
   //   };
   // }, [wsRef.current]);
 
-  return <div ref={terminalRef}></div>;
+  return <div style={{
+    padding: "10px",
+    backgroundColor: "#1e1e1e",
+    borderRadius: "7px",
+    height: "100%"
+    }}>
+      <div ref={terminalRef}></div>
+    </div>;
 }

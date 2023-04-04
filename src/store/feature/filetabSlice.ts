@@ -24,7 +24,14 @@ interface FileTabItems {
 }
 
 const initialState = {
-  filetabItems: [],
+  filetabItems: [{
+    filepath: "Untitled-1",
+    dirpath: "",
+    bppos: [],
+    bpln: [],
+    code: " ",
+    language: "go",
+  }],
   cursor: {
     curPath: "",
     curLine: 0,
@@ -105,6 +112,24 @@ const filetabSlice = createSlice({
       const maxIdx = state.filetabItems.length - 1;
       if (maxIdx >= 0) {
         state.aktifTabItem = state.filetabItems[maxIdx];
+      }else{
+        state.filetabItems.push({
+          filepath: "Untitled-1",
+          dirpath: "",
+          bppos: [],
+          bpln: [],
+          code: "",
+          language: "go",
+        });
+
+        state.aktifTabItem = {
+          filepath: "Untitled-1",
+          dirpath: "",
+          bppos: [],
+          bpln: [],
+          code: "",
+          language: "go",
+        }
       }
     },
     addBreakpoint: (state, { payload }) => {

@@ -41,7 +41,7 @@
     user-select: none;
     -ms-user-select: none;
     -webkit-user-select: none;
-    height:100vh;
+    height:90vh;
 }
 
 .xterm.focus,

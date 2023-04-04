@@ -33,6 +33,8 @@ import {
 import { tags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
 import { useSelector } from "react-redux";
+import {noctisLilac} from 'thememirror';
+
 
 const editorCache = new Map();
 
@@ -284,11 +286,12 @@ export const Editor = () => {
     () => [
       basicSetup,
       lineNumbers(),
-      syntaxHighlighting(myHighlightStyle),
-      darkTheme,
+      // syntaxHighlighting(myHighlightStyle),
+      // darkTheme,
       breakpointGutter,
       languageConf.of(StreamLanguage.define(go)),
       autoLanguage,
+      noctisLilac
     ],
     []
   );

@@ -22,7 +22,7 @@ html {
 .box-shadow { box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05); }
 
 .bg-gelap {
-  background: #1e1e1e;
+  background: #f2f1f8;
   
 }
 
@@ -8177,7 +8177,7 @@ body {
   line-height: 1.8;
   font-weight: normal;
   background: #fff;
-  color: gray; }
+  color: #555; }
 
 a {
   -webkit-transition: .3s all ease;
@@ -8260,8 +8260,8 @@ h1, h2, h3, h4, h5,
   -o-transition: all 0.3s;
   transition: all 0.3s; }
   #sidebar.active {
-    min-width: 65px;
-    max-width: 75px;
+    min-width: 55px;
+    max-width: 65px;
     text-align: center; }
     #sidebar.active ul.components li {
       font-size: 12px; }

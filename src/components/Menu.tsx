@@ -21,8 +21,8 @@ const Menu = ({ activeMenu, setActiveMenu }: MenuProps) => {
     return (
         <>
             <nav id="sidebar" className="active">
-                <h1><a href="#" className="logo"><img src="favicon-32x32.png" alt="bilang.io" /></a></h1>
-                <ul className="list-unstyled components mb-5">
+                {/* <h1><a href="#" className="logo"><img src="favicon-32x32.png" alt="bilang.io" /></a></h1> */}
+                <ul className="list-unstyled components mb-5" style={{marginTop:"20px"}}>
                     {
                         isAuthenticated() ?
                             <li>
@@ -47,12 +47,6 @@ const Menu = ({ activeMenu, setActiveMenu }: MenuProps) => {
                     </li>
                     <li className={activeMenu == 'debug' ? "active" : ""}>
                         <a onClick={() => setActiveMenu('debug')}><span className="fa fa-bug"></span>Debug</a>
-                    </li>
-                    <li className={activeMenu == 'output' ? "active" : ""}>
-                        <a onClick={() => setActiveMenu('output')}><span className="fa fa-align-left"></span>Output</a>
-                    </li>
-                    <li className={activeMenu == 'help' ? "active" : ""}>
-                        <a onClick={() => setActiveMenu('help')}><span className="fa fa-info"></span>Help</a>
                     </li>
                 </ul>
 
