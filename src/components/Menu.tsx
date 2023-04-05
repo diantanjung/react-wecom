@@ -3,13 +3,16 @@ import isAuthenticated from "../utils/isAuthenticated";
 import styles from "./Menu.module.css";
 import { RiCloseLine } from "react-icons/ri";
 import GithubIcon from "mdi-react/GithubIcon";
+import { GoogleLogin } from '@react-oauth/google';
+import axiosInstance from '../helpers/axiosInstance';
 
 type MenuProps = {
     activeMenu: string
     setActiveMenu: (activeMenu:string) => void
+    setUsername: (username:string) => void
 }
 
-const Menu = ({ activeMenu, setActiveMenu }: MenuProps) => {
+const Menu = ({ activeMenu, setActiveMenu, setUsername }: MenuProps) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const logout = () => {
@@ -68,23 +71,36 @@ const Menu = ({ activeMenu, setActiveMenu }: MenuProps) => {
                             <RiCloseLine style={{ marginBottom: "-3px" }} />
                         </button>
                         <div className={styles.modalContent}>
-                            <div>
-                                <div id="g_id_onload"
-                                    data-client_id={process.env.REACT_APP_GOOGLE_CLIENT_ID}
-                                    // data-login_uri="http://localhost:9000/users/login-google"
-                                    data-callback='handleLogin'
-                                    data-auto_prompt="false" >
-                                </div>
-                                <div className="g_id_signin"
-                                    data-type="standard"
-                                    data-size="large"
-                                    data-theme="outline"
-                                    data-text="sign_in_with"
-                                    data-shape="circle"
-                                    data-logo_alignment="right"
-                                    data-width="280">
-                                </div>
-                            </div>
+                            <GoogleLogin
+                                type='standard'
+                                size='large'
+                                theme='outline'
+                                text='signin_with'
+                                shape='circle'
+                                width='280'
+                                onSuccess={credentialResponse => {
+                                    console.log(credentialResponse);
+                                    axiosInstance()
+                                        .post(
+                                            "/users/login-google",
+                                            JSON.stringify({
+                                            credential: credentialResponse.credential,
+                                            })
+                                        )
+                                        .then((res) => {
+                                            localStorage.access_token = res.data.access_token;
+                                            localStorage.username = res.data.user.username;
+                                            setUsername(res.data.user.username);
+                                            window.location.href = "/";
+                                        })
+                                        .catch((err) => {
+                                            console.log(err.message);
+                                        });
+                                }}
+                                onError={() => {
+                                    console.log('Login Failed');
+                                }}
+                                />;
                             <div className={styles.loginContainer}>
                                 <a
                                     className={styles.loginLink}

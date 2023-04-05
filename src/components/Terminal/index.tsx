@@ -74,6 +74,7 @@ export function Terminal({ setTerminal, filepath, dirpath, activeMenu }: termina
         fitAddOn.fit();
         var dimensions = fitAddOn.proposeDimensions();
         if (dimensions) {
+          console.log("dimensions 1:", dimensions.cols, dimensions.rows);
           var size = JSON.stringify({
             cols: dimensions.cols,
             rows: dimensions.rows,
@@ -105,6 +106,7 @@ export function Terminal({ setTerminal, filepath, dirpath, activeMenu }: termina
         if (wsRef.current === null) return;
         var rows = event.rows;
         var cols = event.cols;
+        console.log("dimensions 2:", cols, rows);
         var size = JSON.stringify({ cols: cols, rows: rows });
         var send = new TextEncoder().encode("\x01" + size);
         wsRef.current.send(send);

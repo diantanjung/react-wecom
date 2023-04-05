@@ -27,24 +27,24 @@ const Home = ({ username, setUsername }: HomeProps) => {
 
   const [filetab, setFiletab] = useState([]);
 
-  window.handleLogin = async (googleData) => {
-    axiosInstance()
-      .post(
-        "/users/login-google",
-        JSON.stringify({
-          credential: googleData.credential,
-        })
-      )
-      .then((res) => {
-        localStorage.access_token = res.data.access_token;
-        localStorage.username = res.data.user.username;
-        setUsername(res.data.user.username);
-        window.location.href = "/";
-      })
-      .catch((err) => {
-        console.log(err.message);
-      });
-  };
+  // window.handleLogin = async (googleData) => {
+  //   axiosInstance()
+  //     .post(
+  //       "/users/login-google",
+  //       JSON.stringify({
+  //         credential: googleData.credential,
+  //       })
+  //     )
+  //     .then((res) => {
+  //       localStorage.access_token = res.data.access_token;
+  //       localStorage.username = res.data.user.username;
+  //       setUsername(res.data.user.username);
+  //       window.location.href = "/";
+  //     })
+  //     .catch((err) => {
+  //       console.log(err.message);
+  //     });
+  // };
 
   useEffect(() => {
     console.log(username);
@@ -80,7 +80,7 @@ const Home = ({ username, setUsername }: HomeProps) => {
           </div>
         </div>
       </div>
-      <Menu activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
+      <Menu activeMenu={activeMenu} setActiveMenu={setActiveMenu} setUsername={setUsername} />
     </div>
   );
 };
