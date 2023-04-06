@@ -11,11 +11,9 @@ import "./xterm.css";
 type terminalProps = {
   setTerminal: (terminal: XTerminal | null) => void;
   activeMenu: string
-  filepath: string
-  dirpath: string
 };
 
-export function Terminal({ setTerminal, filepath, dirpath, activeMenu }: terminalProps) {
+export function Terminal({ setTerminal, activeMenu }: terminalProps) {
   const [username] = useState(localStorage.username || "guest");
   const url = `${process.env.REACT_APP_BE_WS2}/${username}`;
 
@@ -84,13 +82,13 @@ export function Terminal({ setTerminal, filepath, dirpath, activeMenu }: termina
           wsRef.current.send(send);
         }
         if (activeMenu == "run") {
-          var cmdStr = "cd " + dirpath + "\n";
+          var cmdStr = "cd " + aktifTabItem.dirpath + "\n";
           wsRef.current.send(cmdStr);
 
-          cmdStr = "clear\ngo build " + filepath + "\n";
+          cmdStr = "clear\ngo build " + aktifTabItem.filepath + "\n";
           wsRef.current.send(cmdStr);
 
-          cmdStr = "go run " + filepath + "\n";
+          cmdStr = "go run " + aktifTabItem.filepath + "\n";
           wsRef.current.send(cmdStr);
         }
 

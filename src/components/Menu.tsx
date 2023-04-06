@@ -65,7 +65,7 @@ const Menu = ({ activeMenu, setActiveMenu, setUsername }: MenuProps) => {
                 <div className={`${isOpen && styles.centered}`}>
                     <div className={styles.modal}>
                         <div className={styles.modalHeader}>
-                            <h5 className={styles.heading}>Sign in to Bilang IO</h5>
+                            <h5 className={styles.heading}>Sign in to Bilang</h5>
                         </div>
                         <button className={styles.closeBtn} onClick={() => setIsOpen(false)}>
                             <RiCloseLine style={{ marginBottom: "-3px" }} />
@@ -100,7 +100,7 @@ const Menu = ({ activeMenu, setActiveMenu, setUsername }: MenuProps) => {
                                 onError={() => {
                                     console.log('Login Failed');
                                 }}
-                                />;
+                                />
                             <div className={styles.loginContainer}>
                                 <a
                                     className={styles.loginLink}

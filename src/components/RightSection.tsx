@@ -42,8 +42,6 @@ const RightSection = ({ activeMenu, filepath, dirpath }: RightSectionProps) => {
         <Terminal
           setTerminal={setTerminal}
           activeMenu={activeMenu}
-          filepath={filepath}
-          dirpath={dirpath}
         />
       );
       break;
@@ -53,8 +51,6 @@ const RightSection = ({ activeMenu, filepath, dirpath }: RightSectionProps) => {
         <Terminal
           setTerminal={setTerminal}
           activeMenu={activeMenu}
-          filepath={filepath}
-          dirpath={dirpath}
         />
       );
       break;
@@ -65,8 +61,6 @@ const RightSection = ({ activeMenu, filepath, dirpath }: RightSectionProps) => {
           <Terminal
           setTerminal={setTerminal}
           activeMenu={activeMenu}
-          filepath={filepath}
-          dirpath={dirpath}
         />
         );
       } else {
