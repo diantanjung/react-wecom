@@ -22,8 +22,7 @@ import {
   lineNumbers,
   gutter,
   GutterMarker,
-  ViewPlugin,
-  ViewUpdate,
+  keymap,
 } from "@codemirror/view";
 import {
   StreamLanguage,
@@ -34,6 +33,7 @@ import { tags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
 import { useSelector } from "react-redux";
 import {noctisLilac} from 'thememirror';
+import {indentWithTab} from "@codemirror/commands"
 
 
 const editorCache = new Map();
@@ -291,6 +291,7 @@ export const Editor = () => {
       breakpointGutter,
       languageConf.of(StreamLanguage.define(go)),
       autoLanguage,
+      keymap.of([indentWithTab]),
       noctisLilac
     ],
     []
