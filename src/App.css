@@ -22,8 +22,9 @@ html {
 .box-shadow { box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05); }
 
 .bg-gelap {
-  background: #f2f1f8;
-  
+  /* background: #f2f1f8; */
+  background-image: url("./assets/img/bg-vintage-paper-2.jpg");
+  background-repeat: repeat;
 }
 
 .bg-white {

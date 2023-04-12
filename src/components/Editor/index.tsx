@@ -34,6 +34,7 @@ import { basicSetup } from "codemirror";
 import { useSelector } from "react-redux";
 import {noctisLilac} from 'thememirror';
 import {indentWithTab} from "@codemirror/commands"
+import {solarizedLight } from "@uiw/codemirror-theme-solarized"
 
 
 const editorCache = new Map();
@@ -254,6 +255,18 @@ export const Editor = () => {
     { dark: true }
   );
 
+  const costumeTheme = EditorView.theme(
+    {
+      "&": {
+        // backgroundImage: "url(\"/bg-old-paper.jpg\")",
+        // backgroundRepeat: "repeat",
+        // backgroundColor: "#034",
+        background: "none",
+      },
+    },
+    { dark: false }
+  );
+
   const myHighlightStyle = HighlightStyle.define([
     { tag: tags.keyword, color: "#fc6" },
     { tag: tags.comment, color: "#37d0ff", fontStyle: "italic" },
@@ -288,11 +301,13 @@ export const Editor = () => {
       lineNumbers(),
       // syntaxHighlighting(myHighlightStyle),
       // darkTheme,
+      costumeTheme,
+      solarizedLight,
       breakpointGutter,
       languageConf.of(StreamLanguage.define(go)),
       autoLanguage,
       keymap.of([indentWithTab]),
-      noctisLilac
+      // noctisLilac
     ],
     []
   );
