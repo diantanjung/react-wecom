@@ -95,7 +95,7 @@ export const Editor = () => {
           set = set.map(transaction.changes);
           for (let e of transaction.effects) {
             if (e.is(breakpointClickEffect)) {
-              console.log("run breakpointClickEffect");
+              // console.log("run breakpointClickEffect");
               if (e.value.on)
                 set = set.update({
                   add: [breakpointMarker.range(e.value.pos)],
@@ -104,7 +104,7 @@ export const Editor = () => {
             }
 
             if (e.is(cursorCurEffect)) {
-              console.log("run cursorCurEffect");
+              // console.log("run cursorCurEffect");
               // if (e.value.lastpos > 0 && e.value.on) {
               //   addMarker.unshift(breakpointMarker.range(e.value.lastpos));
               // }
@@ -116,7 +116,7 @@ export const Editor = () => {
             }
 
             if (e.is(cursorLastEffect)) {
-              console.log("run cursorLastEffect");
+              // console.log("run cursorLastEffect");
               set = set.update({
                 filter: (from) => from != e.value.lastpos,
                 add: e.value.on
@@ -126,7 +126,7 @@ export const Editor = () => {
             }
 
             if (e.is(breakpointLoadEffect)) {
-              console.log("run breakpointLoadEffect");
+              // console.log("run breakpointLoadEffect");
               set = set.update({
                 filter: (from) => !e.value.pos.includes(from),
                 add: e.value.pos.map((item) => breakpointMarker.range(item)),
@@ -197,6 +197,8 @@ export const Editor = () => {
     view.dispatch({
       effects: breakpointClickEffect.of({ pos, on: !hasBreakpoint }),
     });
+
+    
   }
 
   const loadBreakpoint = (view: EditorView, pos: number[]) => {
@@ -216,6 +218,8 @@ export const Editor = () => {
       domEventHandlers: {
         mousedown(view, line) {
           // if (view.state.doc.lineAt(line.from).number == cursor.curLine)
+          // console.log("test click dom get position gutter1", view.state.selection.main.head);
+          // console.log("test click dom get position gutter2", line.from);
           toggleBreakpoint(view, line.from);
           return true;
         },
@@ -307,7 +311,14 @@ export const Editor = () => {
       languageConf.of(StreamLanguage.define(go)),
       autoLanguage,
       keymap.of([indentWithTab]),
-      // noctisLilac
+      // noctisLilac,
+      EditorView.domEventHandlers({
+        mousedown(event, view) {
+          // console.log("test click dom event.ctrlKey", event.ctrlKey);
+          console.log("Offset:", view.posAtCoords({x: event.pageX, y: event.pageY}));
+          return true;
+        },
+      }),
     ],
     []
   );
@@ -375,7 +386,7 @@ export const Editor = () => {
         );
         if(lastItem){
           hasBreakpoint = lastItem.bppos.includes(lastPos);
-          console.log("dispatch last editor", cursor.lastPath, cursor.lastLine, hasBreakpoint);
+          // console.log("dispatch last editor", cursor.lastPath, cursor.lastLine, hasBreakpoint);
           
           lastEditor.dispatch({
             effects: [
@@ -404,17 +415,7 @@ export const Editor = () => {
     curEditor.focus();
   }, [cursor.curPath, cursor.curLine]);
 
-  const testklik = () => {
-    let curEditor = editorCache.get(aktifTabItem.filepath);
-
-    if(curEditor == null) {
-      console.log("curEditor nya NULL");
-      return;
-    }
-    curEditor.dispatch({
-      effects: cursorCurEffect.of({ curpos: 91 }),
-    }); 
-  }
+  
 
   return (
     <>
