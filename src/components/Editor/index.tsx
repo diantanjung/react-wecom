@@ -11,6 +11,7 @@ import { useAppDispatch, useAppSelector } from "../../store/store";
 import {
   addBreakpoint,
   deleteFiletabItem,
+  goDefinition,
   removeBreakpoint,
   setAktifPath,
 } from "../../store/feature/filetabSlice";
@@ -31,8 +32,6 @@ import {
 } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
-import { useSelector } from "react-redux";
-import {noctisLilac} from 'thememirror';
 import {indentWithTab} from "@codemirror/commands"
 import {solarizedLight } from "@uiw/codemirror-theme-solarized"
 
@@ -197,8 +196,6 @@ export const Editor = () => {
     view.dispatch({
       effects: breakpointClickEffect.of({ pos, on: !hasBreakpoint }),
     });
-
-    
   }
 
   const loadBreakpoint = (view: EditorView, pos: number[]) => {
@@ -312,13 +309,13 @@ export const Editor = () => {
       autoLanguage,
       keymap.of([indentWithTab]),
       // noctisLilac,
-      EditorView.domEventHandlers({
-        mousedown(event, view) {
-          // console.log("test click dom event.ctrlKey", event.ctrlKey);
-          console.log("Offset:", view.posAtCoords({x: event.pageX, y: event.pageY}));
-          return true;
-        },
-      }),
+      // EditorView.domEventHandlers({
+      //   mousedown(event, view) {
+      //     // console.log("test click dom event.ctrlKey", event.ctrlKey);
+      //     console.log("Offset:", view.posAtCoords({x: event.pageX, y: event.pageY}));
+      //     return true;
+      //   },
+      // }),
     ],
     []
   );
@@ -357,6 +354,18 @@ export const Editor = () => {
       // Populate the cache.
       editorCache.set(aktifTabItem.filepath, editor);
     }
+
+    const pos = editor.state.doc.line(aktifTabItem.cursorln).from;
+    editor.dispatch({
+      effects: [
+        EditorView.scrollIntoView(pos, {
+          y: "center",
+        }),
+      ],
+      selection: { anchor: pos, head: pos },
+      // scrollIntoView: true
+    });
+    editor.focus();
 
     editorRef.current.appendChild(editor.dom);
     loadBreakpoint(editor, aktifTabItem.bppos);
@@ -415,7 +424,37 @@ export const Editor = () => {
     curEditor.focus();
   }, [cursor.curPath, cursor.curLine]);
 
-  
+  const handleClickEditor = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+    let curEditor = editorCache.get(aktifTabItem.filepath);
+
+    if(curEditor == null) {
+      return;
+    }
+    
+    if(e.ctrlKey){
+      const offset = curEditor.posAtCoords({x: e.pageX, y: e.pageY}) + 16;
+      console.log("offset:", offset);
+      dispatch(
+        goDefinition({
+          filepath: aktifTabItem.filepath,
+          offset: offset,
+        })
+      )
+
+      // console.log("habis then:", aktifTabItem.filepath);
+      // curEditor = editorCache.get(aktifTabItem.filepath);
+      // curEditor.dispatch({
+      //   effects: [
+      //     EditorView.scrollIntoView(1, {
+      //       y: "center",
+      //     }),
+      //   ],
+      //   selection: { anchor: 1, head: 1 },
+      //   // scrollIntoView: true
+      // });
+      // curEditor.focus();
+    }
+  }
 
   return (
     <>
@@ -467,7 +506,7 @@ export const Editor = () => {
         )}
       </ul>
       <br />
-      <section ref={editorRef} />
+      <section ref={editorRef} onClick={(e) => handleClickEditor(e)} />
     </>
   );
 };

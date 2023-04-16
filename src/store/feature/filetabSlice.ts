@@ -9,6 +9,7 @@ export interface FileTabItem {
   bpln: number[];
   code: string;
   language: string;
+  cursorln: number;
 }
 
 interface FileTabItems {
@@ -31,6 +32,7 @@ const initialState = {
     bpln: [],
     code: " ",
     language: "go",
+    cursorln: 1,
   }],
   cursor: {
     curPath: "",
@@ -46,6 +48,7 @@ const initialState = {
     bpln: [],
     code: " ",
     language: "go",
+    cursorln: 1,
   },
 } as FileTabItems;
 
@@ -70,6 +73,7 @@ const filetabSlice = createSlice({
             bpln: [],
             code: payload.code,
             language: payload.language,
+            cursorln: 1,
           });
 
           state.aktifTabItem = {
@@ -79,6 +83,7 @@ const filetabSlice = createSlice({
             bpln: [],
             code: payload.code,
             language: payload.language,
+            cursorln: 1,
           };
         }
       }
@@ -96,6 +101,7 @@ const filetabSlice = createSlice({
             bpln: [],
             code: payload.code,
             language: payload.language,
+            cursorln: 1,
           });
         }
       }
@@ -120,6 +126,7 @@ const filetabSlice = createSlice({
           bpln: [],
           code: "",
           language: "go",
+          cursorln: 1,
         });
 
         state.aktifTabItem = {
@@ -129,6 +136,7 @@ const filetabSlice = createSlice({
           bpln: [],
           code: "",
           language: "go",
+          cursorln: 1,
         }
       }
     },
@@ -208,6 +216,7 @@ const filetabSlice = createSlice({
             bpln: [],
             code: payload.file_str,
             language: payload.language,
+            cursorln: 1,
           });
 
           state.aktifTabItem = {
@@ -217,6 +226,7 @@ const filetabSlice = createSlice({
             bpln: [],
             code: payload.file_str,
             language: payload.language,
+            cursorln: 1,
           };
         }
       }
@@ -244,6 +254,7 @@ const filetabSlice = createSlice({
             bpln: [],
             code: payload.file_str,
             language: payload.language,
+            cursorln: 1,
           });
 
           state.aktifTabItem = {
@@ -253,6 +264,41 @@ const filetabSlice = createSlice({
             bpln: [],
             code: payload.file_str,
             language: payload.language,
+            cursorln: 1,
+          };
+        }
+      }
+    });
+
+    builder.addCase(goDefinition.fulfilled, (state, { payload }) => {
+      if (state.aktifTabItem.filepath !== payload.filepath) {
+        console.log(payload);
+        const isExist = state.filetabItems.find(
+          (item) => item.filepath === payload.filepath
+        );
+        if (isExist) {
+          state.aktifTabItem = state.filetabItems.find(
+            (item) => item.filepath === payload.filepath
+          ) as FileTabItem;
+        } else {
+          state.filetabItems.push({
+            filepath: payload.filepath,
+            dirpath: payload.dirpath,
+            bppos: [],
+            bpln: [],
+            code: payload.file_str,
+            language: payload.language,
+            cursorln: payload.line_number,
+          });
+
+          state.aktifTabItem = {
+            filepath: payload.filepath,
+            dirpath: payload.dirpath,
+            bppos: [],
+            bpln: [],
+            code: payload.file_str,
+            language: payload.language,
+            cursorln: payload.line_number,
           };
         }
       }
@@ -311,6 +357,37 @@ export const setCursor = createAsyncThunk(
         );
         // const data = resp.data.json();
         resp.data.curLine = curLine;
+        return resp.data;
+      }
+    } catch (error) {
+      return thunkAPI.rejectWithValue("something went wrong");
+    }
+  }
+);
+
+interface goDefinitionParams {
+  filepath: string
+  offset: number
+}
+
+export const goDefinition = createAsyncThunk(
+  "filetabs/goDefinition",
+  async (params: goDefinitionParams, thunkAPI) => {
+    try {
+      const {filepath, offset} = params;
+      if (isAuthenticated()) {
+        const username = localStorage.username || "guest";
+        const resp = await  axiosInstance().post(
+          "/rungodef",
+          JSON.stringify({ path_str: filepath, offset: offset, username: username })
+        )
+        return resp.data;
+      } else {
+        const resp = await axiosInstance().post(
+          "/grungodef",
+          JSON.stringify({ path_str: filepath, offset: offset, username: "guest" })
+        );
+        // const data = resp.data.json();
         return resp.data;
       }
     } catch (error) {
