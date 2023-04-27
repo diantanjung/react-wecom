@@ -29,27 +29,27 @@ const Menu = ({ activeMenu, setActiveMenu, setUsername }: MenuProps) => {
                     {
                         isAuthenticated() ?
                             <li>
-                                <a onClick={() => logout()}><span className="fa fa-sign-out"></span> Logout</a>
+                                <a onClick={() => logout()} className="text-menu"><span className="fa fa-sign-out"></span> Logout</a>
                             </li>
                             :
                             <li>
-                                <a onClick={() => setIsOpen(true)}><span className="fa fa-sign-in"></span>Login</a>
+                                <a onClick={() => setIsOpen(true)} className="text-menu"><span className="fa fa-sign-in"></span>Login</a>
                             </li>
                     }
                     <li className={activeMenu == 'open' ? "active" : ""}>
-                        <a onClick={() => setActiveMenu('open')}><span className="fa fa-file"></span>Open</a>
+                        <a onClick={() => setActiveMenu('open')} className="text-menu"><span className="fa fa-file"></span>Open</a>
                     </li>
                     <li className={activeMenu == 'files' ? "active" : ""}>
-                        <a onClick={() => setActiveMenu('files')}><span className="fa fa-folder"></span>Files</a>
+                        <a onClick={() => setActiveMenu('files')} className="text-menu"><span className="fa fa-folder"></span>Files</a>
                     </li>
                     <li className={activeMenu == 'terminal' ? "active" : ""}>
-                        <a onClick={() => setActiveMenu('terminal')}><span className="fa fa-terminal"></span>Terminal</a>
+                        <a onClick={() => setActiveMenu('terminal')} className="text-menu"><span className="fa fa-terminal"></span>Terminal</a>
                     </li>
                     <li className={activeMenu == 'run' ? "active" : ""}>
-                        <a onClick={() => setActiveMenu('run')}><span className="fa fa-play"></span>Run</a>
+                        <a onClick={() => setActiveMenu('run')} className="text-menu"><span className="fa fa-play"></span>Run</a>
                     </li>
                     <li className={activeMenu == 'debug' ? "active" : ""}>
-                        <a onClick={() => setActiveMenu('debug')}><span className="fa fa-bug"></span>Debug</a>
+                        <a onClick={() => setActiveMenu('debug')} className="text-menu"><span className="fa fa-bug text-menu"></span>Debug</a>
                     </li>
                 </ul>
 

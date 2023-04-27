@@ -259,10 +259,11 @@ export const Editor = () => {
   const costumeTheme = EditorView.theme(
     {
       "&": {
-        // backgroundImage: "url(\"/bg-old-paper.jpg\")",
-        // backgroundRepeat: "repeat",
+        backgroundImage: "url(\"/bg-vintage-paper-2.jpg\")",
+        backgroundRepeat: "repeat",
+        minHeight: "90vh"
         // backgroundColor: "#034",
-        background: "none",
+        // background: "none",
       },
     },
     { dark: false }
@@ -423,6 +424,21 @@ export const Editor = () => {
     });
     curEditor.focus();
   }, [cursor.curPath, cursor.curLine]);
+
+  useEffect(() => {
+    let editor = editorCache.get(aktifTabItem.filepath);
+    const pos = editor.state.doc.line(aktifTabItem.cursorln).from;
+    editor.dispatch({
+      effects: [
+        EditorView.scrollIntoView(pos, {
+          y: "center",
+        }),
+      ],
+      selection: { anchor: pos, head: pos },
+      // scrollIntoView: true
+    });
+    editor.focus();
+  }, [aktifTabItem.cursorln]);
 
   const handleClickEditor = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     let curEditor = editorCache.get(aktifTabItem.filepath);

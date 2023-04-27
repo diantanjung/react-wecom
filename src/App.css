@@ -22,9 +22,9 @@ html {
 .box-shadow { box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05); }
 
 .bg-gelap {
-  /* background: #f2f1f8; */
-  background-image: url("./assets/img/bg-vintage-paper-2.jpg");
-  background-repeat: repeat;
+  background: #f2f1f8;
+  /* background-image: url("./assets/img/bg-vintage-paper-2.jpg");
+  background-repeat: repeat; */
 }
 
 .bg-white {
@@ -7966,7 +7966,12 @@ button.bg-dark:focus {
   text-align: right !important; }
 
 .text-center {
-  text-align: center !important; }
+  text-align: center !important; 
+  cursor: default;
+}
+.text-menu {
+  cursor: default;
+}
 
 @media (min-width: 576px) {
   .text-sm-left {

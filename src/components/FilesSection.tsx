@@ -172,7 +172,7 @@ const FilesSection = ({
                       setDirpath(dirLink.replace(/\/+/g, "/"));
                     }}
                     className="text-center"
-                    style={{ cursor: "pointer", color: "#1e1e1e" }}
+                    style={{ cursor: "default", color: "#1e1e1e" }}
                   >
                     {item.filename}
                   </a>

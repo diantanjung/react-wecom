@@ -272,7 +272,6 @@ const filetabSlice = createSlice({
 
     builder.addCase(goDefinition.fulfilled, (state, { payload }) => {
       if (state.aktifTabItem.filepath !== payload.filepath) {
-        console.log(payload);
         const isExist = state.filetabItems.find(
           (item) => item.filepath === payload.filepath
         );
@@ -301,6 +300,8 @@ const filetabSlice = createSlice({
             cursorln: payload.line_number,
           };
         }
+      }else{
+        state.aktifTabItem.cursorln = payload.line_number;
       }
     });
   },
