@@ -309,6 +309,7 @@ export const Editor = () => {
       languageConf.of(StreamLanguage.define(go)),
       autoLanguage,
       keymap.of([indentWithTab]),
+      EditorView.clickAddsSelectionRange.of(event => event.altKey)
       // noctisLilac,
       // EditorView.domEventHandlers({
       //   mousedown(event, view) {
@@ -355,6 +356,8 @@ export const Editor = () => {
       // Populate the cache.
       editorCache.set(aktifTabItem.filepath, editor);
     }
+
+    editor.state.allowMultipleSelection = false;
 
     const pos = editor.state.doc.line(aktifTabItem.cursorln).from;
     editor.dispatch({
