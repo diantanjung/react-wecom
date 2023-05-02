@@ -236,6 +236,7 @@ export const Editor = () => {
       "&": {
         color: "white",
         backgroundColor: "#034",
+        
       },
       ".cm-content": {
         caretColor: "#0e9",
@@ -250,8 +251,10 @@ export const Editor = () => {
         backgroundColor: "#045",
         color: "#ddd",
         border: "none",
+       
       },
-      ".cm-content, .cm-gutter": { minHeight: "1000px" },
+      ".cm-content, .cm-gutter": { minHeight: "1000px",  },
+      ".cm-gutter": { cursor: "default",},
     },
     { dark: true }
   );
@@ -265,6 +268,7 @@ export const Editor = () => {
         // backgroundColor: "#034",
         // background: "none",
       },
+      // ".cm-gutter": { cursor: "default",},
     },
     { dark: false }
   );
@@ -300,7 +304,17 @@ export const Editor = () => {
   const extensions = useMemo<Extension[]>(
     () => [
       basicSetup,
-      lineNumbers(),
+      lineNumbers({
+        domEventHandlers: {
+          mousedown(view, line) {
+            // if (view.state.doc.lineAt(line.from).number == cursor.curLine)
+            // console.log("test click dom get position gutter1", view.state.selection.main.head);
+            // console.log("test click dom get position gutter2", line.from);
+            toggleBreakpoint(view, line.from);
+            return true;
+          },
+        },
+      }),
       // syntaxHighlighting(myHighlightStyle),
       // darkTheme,
       costumeTheme,
