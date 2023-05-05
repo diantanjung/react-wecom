@@ -106,7 +106,7 @@ export default function Home() {
             });
             term.onTitleChange(function (event) {
                 console.log("evt : " + event);
-                let curPath = "/home/" + username;
+                let curPath = "/Users/" + username;
                 let command = "";
 
                 if (event.includes(":")) {
@@ -114,7 +114,7 @@ export default function Home() {
                     let len = term.length;
                     curPath = term[len - 1];
                     if (curPath === "~") {
-                        curPath = "/home/" + username;
+                        curPath = "/Users/" + username;
                     }
                 }
 
