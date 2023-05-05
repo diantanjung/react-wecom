@@ -8369,3 +8369,10 @@ a[data-toggle="collapse"] {
   .btn.btn-primary:hover, .btn.btn-primary:focus {
     background: #3e64ff !important;
     border-color: #3e64ff !important; }
+
+.input-bar {
+  width: 400px;
+  height: 40px;
+  font-size: 16px;
+  padding: 0 8px;
+}
