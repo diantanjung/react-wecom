@@ -8,19 +8,19 @@ import "./App.css";
 import {Route, Routes } from "react-router-dom"
 
 function App() {
-  const [username, setUsername] = useState(localStorage.username || 'guest');
+  const [username, setUsername] = useState(localStorage.username || 'muhammad');
 
   return (
     <div>
         <div>
-          <Routes>
-            <Route path="/" element={<Home username={username} setUsername={setUsername}/>} > </Route>
-            <Route path="/@:username" element={<RunFunc />}></Route>
-            <Route path="/login-old" element={<Login />}></Route>
-            <Route path="/login" element={<LoginGithub setUsername={setUsername}/>} ></Route>
-            <Route path="/ps-aux" element={<Psaux />}></Route>
+            <Routes>
+              <Route path="/" element={<Home username={username} setUsername={setUsername}/>} > </Route>
+              <Route path="/@:username" element={<RunFunc />}></Route>
+              <Route path="/login-old" element={<Login />}></Route>
+              <Route path="/login" element={<LoginGithub setUsername={setUsername}/>} ></Route>
+              <Route path="/ps-aux" element={<Psaux />}></Route>
 
-          </Routes>
+            </Routes>
         </div>
     </div>
   );

@@ -13,6 +13,10 @@ interface customWindow extends Window {
     handleLogin?: (googleData:any) => void
 }
 
+enum CommandPalettePage {
+  Root = "ROOT"
+}
+
 declare const window: customWindow;
 
 const Home = ({ username, setUsername }: HomeProps) => {
@@ -61,7 +65,6 @@ const Home = ({ username, setUsername }: HomeProps) => {
                     data-your_own_param_2_to_login="any_value">
                 </div>
             } */}
-
       <div id="content">
         <div className="container-fluid">
           <div className="row">
