@@ -33,6 +33,7 @@ import {
 import { tags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
 import {indentWithTab} from "@codemirror/commands"
+
 import {solarizedLight } from "@uiw/codemirror-theme-solarized"
 import {
   KBarProvider,
@@ -42,9 +43,10 @@ import {
   KBarSearch
 } from "kbar";
 import axios from "axios";
-
+import { ColorRing } from  'react-loader-spinner'
 
 const editorCache = new Map();
+
 
 const breakpointMarker = new (class extends GutterMarker {
   toDOM() {
@@ -496,12 +498,19 @@ export const Editor = () => {
       // curEditor.focus();
     }
   }
-
   const baseURL = "https://api.openai.com/v1/chat/completions";
   const [search, setSearch] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
 
   const handleKeyUp = (event: any) => {
     if (event.key === 'Enter') {
+      if (editorRef.current === null) return;
+      let curEditor = editorCache.get(aktifTabItem.filepath);
+      curEditor.focus();
+  
+      editorRef.current.appendChild(curEditor.dom);
+      loadBreakpoint(curEditor, aktifTabItem.bppos);
+      setLoading(true)
       axios
         .post(baseURL, {
           model: 'gpt-3.5-turbo',
@@ -516,7 +525,7 @@ export const Editor = () => {
           }
         })
         .then((response) => {
-          console.log(response.data.choices[0].message.content)
+          setSearch('')
           let curEditor = editorCache.get(aktifTabItem.filepath);
 
           if(curEditor == null) {
@@ -526,8 +535,8 @@ export const Editor = () => {
           curEditor.dispatch({
             changes: {from: 0, insert: response.data.choices[0].message.content + "\n"}
           })
-          
-        });
+        })
+        .finally(() => setLoading(false));
     }
   }
 
@@ -536,12 +545,29 @@ export const Editor = () => {
   }
 
   return (
-    <>
-      <KBarProvider>
+    <KBarProvider>
       <KBarPortal>
         <KBarPositioner>
           <KBarAnimator>
-            <KBarSearch className="input-bar" defaultPlaceholder="Type text to search" onChange={onChangeInput} onKeyDownCapture={handleKeyUp} />
+            <KBarSearch 
+              className="input-bar"
+              defaultPlaceholder="Type text to search"
+              value={search} disabled={loading}
+              onChange={onChangeInput}
+              onKeyDownCapture={handleKeyUp} />
+            <ColorRing
+              visible={loading}
+              height="50"
+              width="50"
+              ariaLabel="blocks-loading"
+              wrapperStyle={{
+                position: 'absolute',
+                right: '4px',
+                top: '-5px'
+              }}
+              wrapperClass="blocks-wrapper"
+              colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
+            />
           </KBarAnimator>
         </KBarPositioner>
       </KBarPortal>
@@ -594,7 +620,6 @@ export const Editor = () => {
       </ul>
       <br />
       <section ref={editorRef} onClick={(e) => handleClickEditor(e)} />
-      </KBarProvider>
-    </>
+    </KBarProvider>
   );
 };

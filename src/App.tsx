@@ -14,14 +14,14 @@ function App() {
   return (
     <div>
         <div>
-          <Routes>
-            <Route path="/" element={<Home username={username} setUsername={setUsername}/>} > </Route>
-            <Route path="/@:username" element={<RunFunc />}></Route>
-            <Route path="/login-old" element={<Login />}></Route>
-            <Route path="/login" element={<LoginGithub setUsername={setUsername}/>} ></Route>
-            <Route path="/ps-aux" element={<Psaux />}></Route>
-            <Route path="/open-ai" element={<Openai />}></Route>
-          </Routes>
+            <Routes>
+              <Route path="/" element={<Home username={username} setUsername={setUsername}/>} > </Route>
+              <Route path="/@:username" element={<RunFunc />}></Route>
+              <Route path="/login-old" element={<Login />}></Route>
+              <Route path="/login" element={<LoginGithub setUsername={setUsername}/>} ></Route>
+              <Route path="/ps-aux" element={<Psaux />}></Route>
+
+            </Routes>
         </div>
     </div>
   );
