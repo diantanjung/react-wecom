@@ -525,6 +525,7 @@ export const Editor = () => {
           }
         })
         .then((response) => {
+          setSearch('')
           console.log(response.data.choices[0].message.content)
         })
         .finally(() => setLoading(false));
@@ -540,7 +541,12 @@ export const Editor = () => {
       <KBarPortal>
         <KBarPositioner>
           <KBarAnimator>
-            <KBarSearch className="input-bar" defaultPlaceholder="Type text to search" disabled={loading} onChange={onChangeInput} onKeyDownCapture={handleKeyUp}></KBarSearch>
+            <KBarSearch 
+              className="input-bar"
+              defaultPlaceholder="Type text to search"
+              value={search} disabled={loading}
+              onChange={onChangeInput}
+              onKeyDownCapture={handleKeyUp} />
             <ColorRing
               visible={loading}
               height="50"
