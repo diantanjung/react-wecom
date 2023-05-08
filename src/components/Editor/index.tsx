@@ -34,10 +34,6 @@ import { tags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
 import {indentWithTab} from "@codemirror/commands"
 
-import { useSelector } from "react-redux";
-import {noctisLilac} from 'thememirror';
-import axiosInstance from "../../helpers/axiosInstance";
-
 import {solarizedLight } from "@uiw/codemirror-theme-solarized"
 import {
   KBarProvider,
@@ -47,6 +43,7 @@ import {
   KBarSearch
 } from "kbar";
 import axios from "axios";
+import { ColorRing } from  'react-loader-spinner'
 
 const editorCache = new Map();
 
@@ -503,9 +500,17 @@ export const Editor = () => {
   }
   const baseURL = "https://api.openai.com/v1/chat/completions";
   const [search, setSearch] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
 
   const handleKeyUp = (event: any) => {
     if (event.key === 'Enter') {
+      if (editorRef.current === null) return;
+      let curEditor = editorCache.get(aktifTabItem.filepath);
+      curEditor.focus();
+  
+      editorRef.current.appendChild(curEditor.dom);
+      loadBreakpoint(curEditor, aktifTabItem.bppos);
+      setLoading(true)
       axios
         .post(baseURL, {
           model: 'gpt-3.5-turbo',
@@ -521,7 +526,8 @@ export const Editor = () => {
         })
         .then((response) => {
           console.log(response.data.choices[0].message.content)
-        });
+        })
+        .finally(() => setLoading(false));
     }
   }
 
@@ -534,7 +540,20 @@ export const Editor = () => {
       <KBarPortal>
         <KBarPositioner>
           <KBarAnimator>
-            <KBarSearch className="input-bar" defaultPlaceholder="Type text to search" onChange={onChangeInput} onKeyDownCapture={handleKeyUp} />
+            <KBarSearch className="input-bar" defaultPlaceholder="Type text to search" disabled={loading} onChange={onChangeInput} onKeyDownCapture={handleKeyUp}></KBarSearch>
+            <ColorRing
+              visible={loading}
+              height="50"
+              width="50"
+              ariaLabel="blocks-loading"
+              wrapperStyle={{
+                position: 'absolute',
+                right: '4px',
+                top: '-5px'
+              }}
+              wrapperClass="blocks-wrapper"
+              colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
+            />
           </KBarAnimator>
         </KBarPositioner>
       </KBarPortal>
