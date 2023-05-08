@@ -521,12 +521,20 @@ export const Editor = () => {
         }, {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.REACT_APP_OPEN_AI_KEY}` 
+            'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}` 
           }
         })
         .then((response) => {
           setSearch('')
-          console.log(response.data.choices[0].message.content)
+          let curEditor = editorCache.get(aktifTabItem.filepath);
+
+          if(curEditor == null) {
+            return;
+          }
+
+          curEditor.dispatch({
+            changes: {from: 0, insert: response.data.choices[0].message.content + "\n"}
+          })
         })
         .finally(() => setLoading(false));
     }
