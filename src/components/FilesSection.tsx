@@ -31,7 +31,7 @@ const FilesSection = ({
 
   const [error, setError] = useState("");
 
-  const [fileaddress, setFileaddress] = useState("/Users/" + username);
+  const [fileaddress, setFileaddress] = useState("/home/" + username);
 
   // let file = '/home/' + username ;
   const [data, setData] = useState<DataResponse[]>([]);

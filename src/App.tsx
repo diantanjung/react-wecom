@@ -8,7 +8,7 @@ import "./App.css";
 import {Route, Routes } from "react-router-dom"
 
 function App() {
-  const [username, setUsername] = useState(localStorage.username || 'muhammad');
+  const [username, setUsername] = useState(localStorage.username || 'guest');
 
   return (
     <div>
