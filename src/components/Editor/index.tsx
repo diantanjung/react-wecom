@@ -44,6 +44,7 @@ import {
 } from "kbar";
 import axios from "axios";
 import { ColorRing } from  'react-loader-spinner'
+import { log } from "console";
 
 const editorCache = new Map();
 
@@ -501,22 +502,24 @@ export const Editor = () => {
   const baseURL = "https://api.openai.com/v1/chat/completions";
   const [search, setSearch] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+  const [hidden, setHidden] = React.useState(false);
 
   const handleKeyUp = (event: any) => {
     if (event.key === 'Enter') {
       if (editorRef.current === null) return;
       let curEditor = editorCache.get(aktifTabItem.filepath);
-      curEditor.focus();
+      const from =  curEditor.state.selection.ranges[0].from || 0 
+      const to =  curEditor.state.selection.ranges[0].to || 0
+      const doc = curEditor.state.sliceDoc(from,to)
   
-      editorRef.current.appendChild(curEditor.dom);
-      loadBreakpoint(curEditor, aktifTabItem.bppos);
       setLoading(true)
       axios
         .post(baseURL, {
           model: 'gpt-3.5-turbo',
           max_tokens: 300,
+          temperature: 0.0,
           messages: [
-            {'role': 'user', 'content': search}
+            {'role': 'user', 'content': "Answer in HTML. " + search + " : " + doc}
           ],
         }, {
           headers: {
@@ -526,18 +529,25 @@ export const Editor = () => {
         })
         .then((response) => {
           setSearch('')
-          let curEditor = editorCache.get(aktifTabItem.filepath);
-
-          if(curEditor == null) {
-            return;
-          }
 
           curEditor.dispatch({
-            changes: {from: 0, insert: response.data.choices[0].message.content + "\n"}
+            changes: {from: from, to: to, insert: response.data.choices[0].message.content + "\n"}
           })
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          setLoading(false)
+          // const evt = new KeyboardEvent("keydown",{
+          //   'key': 'Escape'
+          // });
+          // const evt = new Event("click");
+          // dispatchEvent(evt);
+        });
     }
+  }
+
+  const onSubmitKbar = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("submit kbar");
+    
   }
 
   const onChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -548,13 +558,14 @@ export const Editor = () => {
     <KBarProvider>
       <KBarPortal>
         <KBarPositioner>
-          <KBarAnimator>
-            <KBarSearch 
+          <KBarAnimator >
+            <KBarSearch  
               className="input-bar"
               defaultPlaceholder="Type text to search"
               value={search} disabled={loading}
               onChange={onChangeInput}
-              onKeyDownCapture={handleKeyUp} />
+              onKeyDownCapture={handleKeyUp}
+              />
             <ColorRing
               visible={loading}
               height="50"
