@@ -24,6 +24,8 @@ import {
   gutter,
   GutterMarker,
   keymap,
+  Decoration,
+  WidgetType
 } from "@codemirror/view";
 import {
   StreamLanguage,
@@ -33,7 +35,6 @@ import {
 import { tags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
 import {indentWithTab} from "@codemirror/commands"
-
 import {solarizedLight } from "@uiw/codemirror-theme-solarized"
 import {
   KBarProvider,
@@ -44,7 +45,7 @@ import {
 } from "kbar";
 import axios from "axios";
 import { ColorRing } from  'react-loader-spinner'
-import { log } from "console";
+const Diff = require('diff');
 
 const editorCache = new Map();
 
@@ -86,6 +87,57 @@ const breakpointLoadEffect = StateEffect.define<{ pos: number[] }>({
 //   map: (val, mapping) => ({ bp: val.bp.map( item => ({pos: mapping.mapPos(item.pos), linenumber:item.linenumber} as Breakpoint) ) }),
 // });
 
+const changedLineGutterMarker = /*@__PURE__*/new class extends GutterMarker {
+  constructor() {
+      super();
+      this.elementClass = "cm-changedLineGutter";
+  }
+};
+
+const greenHighlightMark = Decoration.line({
+  attributes: {style: 'background-color: #c7e7c7;'}, // green
+});
+
+const redHighlightMark = Decoration.line({
+  attributes: {style: 'background-color: #fdd3ce'}, // red
+});
+
+const acceptBtnType = new class extends WidgetType {
+  toDOM() {
+    let btn = document.createElement('button');
+    btn.innerHTML = `<i class="fa fa-check"></i>`;
+    btn.className = "btn btn-primary btn-sm btn-circle"; 
+    btn.onclick = function()
+    {
+        alert("accept");
+    }
+    return btn;
+  }
+}
+
+const acceptBtn = Decoration.widget({
+  widget: acceptBtnType
+});
+
+
+
+const brType = new class extends WidgetType {
+  toDOM() {
+    let br = document.createElement('br');
+    return br;
+  }
+}
+
+const br = Decoration.widget({
+  widget: brType
+});
+
+const greeHighlight = StateEffect.define<{pos: number[]}>();
+const redHighlight = StateEffect.define<{pos: number[]}>();
+const buttonForm = StateEffect.define<{pos: number}>();
+
+
+
 export const Editor = () => {
   const editorRef = React.useRef<HTMLElement>(null);
   // const [view, setView] = React.useState<EditorView | null>(null);
@@ -105,7 +157,7 @@ export const Editor = () => {
           set = set.map(transaction.changes);
           for (let e of transaction.effects) {
             if (e.is(breakpointClickEffect)) {
-              // console.log("run breakpointClickEffect");
+              console.log("run breakpointClickEffect");
               if (e.value.on)
                 set = set.update({
                   add: [breakpointMarker.range(e.value.pos)],
@@ -114,7 +166,7 @@ export const Editor = () => {
             }
 
             if (e.is(cursorCurEffect)) {
-              // console.log("run cursorCurEffect");
+              console.log("run cursorCurEffect");
               // if (e.value.lastpos > 0 && e.value.on) {
               //   addMarker.unshift(breakpointMarker.range(e.value.lastpos));
               // }
@@ -126,7 +178,7 @@ export const Editor = () => {
             }
 
             if (e.is(cursorLastEffect)) {
-              // console.log("run cursorLastEffect");
+              console.log("run cursorLastEffect");
               set = set.update({
                 filter: (from) => from != e.value.lastpos,
                 add: e.value.on
@@ -136,7 +188,7 @@ export const Editor = () => {
             }
 
             if (e.is(breakpointLoadEffect)) {
-              // console.log("run breakpointLoadEffect");
+              console.log("run breakpointLoadEffect");
               set = set.update({
                 filter: (from) => !e.value.pos.includes(from),
                 add: e.value.pos.map((item) => breakpointMarker.range(item)),
@@ -149,38 +201,60 @@ export const Editor = () => {
     []
   );
 
-  // const toggleCursor = (
-  //   view: EditorView,
-  //   currentLn: number,
-  //   lastLn: number
-  // ) => {
-  //   console.log("currentLn lastLn", currentLn, lastLn);
+  const cancelBtnType = new class extends WidgetType {
+    toDOM() {
+      let btn = document.createElement('button');
+      btn.innerHTML = `<i class="fa fa-times"></i>`;
+      btn.className = "btn btn-danger btn-sm btn-circle"; 
+      let br = document.createElement('br');
+      btn.parentNode?.insertBefore(br, btn.nextSibling);
+      btn.onclick = function()
+      {
+        console.log("test cancel button form");
+      }
+      return btn;
+    }
+  }
+  
+  const cancelBtn = Decoration.widget({
+    widget: cancelBtnType
+  });
 
-  //   if (currentLn < 1) return false;
-  //   const curPos = view.state.doc.line(currentLn).from;
-  //   let lastPos = -1;
-  //   let hasBreakpoint = false;
-  //   if (lastLn > 0) {
-  //     lastPos = view.state.doc.line(lastLn).from;
-  //     hasBreakpoint = aktifTabItem.bppos.includes(lastPos);
-  //   }
-  //   console.log("curPos lastpos hasBreakpoint", curPos, lastPos, hasBreakpoint);
-  //   view.dispatch({
-  //     effects: [
-  //       cursorEffect.of({
-  //         curpos: curPos,
-  //         lastpos: lastPos,
-  //         on: hasBreakpoint,
-  //       }),
-  //       EditorView.scrollIntoView(curPos, {
-  //         y: "center",
-  //       }),
-  //     ],
-  //     selection: { anchor: curPos, head: curPos },
-  //     // scrollIntoView: true
-  //   });
-  //   view.focus();
-  // };
+
+
+const lineHighlightField = StateField.define({
+  create() {
+    return Decoration.none;
+  },
+  update(lines, tr) {
+    lines = lines.map(tr.changes);
+    for (let e of tr.effects) {
+      if (e.is(buttonForm)) {
+        console.log("buttonForm effect");
+        // lines = Decoration.none;
+        lines = lines.update({add: [acceptBtn.range(e.value.pos), cancelBtn.range(e.value.pos), br.range(e.value.pos)]});
+      }
+
+      if (e.is(greeHighlight)) {
+        console.log("greeHighlight effect");
+        const greenDecor = e.value.pos.map((item) => {
+          return greenHighlightMark.range(item)
+        });
+        lines = lines.update({add: greenDecor});
+      }
+
+      if (e.is(redHighlight)) {
+        console.log("redHighlight effect");
+        const redDecor = e.value.pos.map((item) => {
+          return redHighlightMark.range(item)
+        });
+        lines = lines.update({add: redDecor});
+      }
+    }
+    return lines;
+  },
+  provide: (f) => EditorView.decorations.from(f),
+});
 
   function toggleBreakpoint(view: EditorView, pos: number) {
     let breakpoints = view.state.field(breakpointState);
@@ -280,6 +354,18 @@ export const Editor = () => {
         // background: "none",
       },
       // ".cm-gutter": { cursor: "default",},
+      ".cm-changedLineGutter": { background: "#e43" },
+      ".cm-btn-form": { background: "#e43" },
+      ".btn-circle": {
+        width: "30px",
+        height: "30px",
+        padding: "6px 0px",
+        borderRadius: "15px",
+        textAlign: "center",
+        fontSize: "12px",
+        lineHeight: "1.42857",
+        marginRight: "5px",
+      }
     },
     { dark: false }
   );
@@ -328,6 +414,7 @@ export const Editor = () => {
       }),
       // syntaxHighlighting(myHighlightStyle),
       // darkTheme,
+      lineHighlightField,
       costumeTheme,
       solarizedLight,
       breakpointGutter,
@@ -368,6 +455,9 @@ export const Editor = () => {
   useEffect(() => {
     if (editorRef.current === null) return;
 
+    console.log("aktifTabItem.filepath", aktifTabItem.filepath);
+    
+
     let editor = editorCache.get(aktifTabItem.filepath);
     if (!editor) {
       // Cache miss --> mint a new editor.
@@ -395,6 +485,12 @@ export const Editor = () => {
       // scrollIntoView: true
     });
     editor.focus();
+
+    // test coba hightlight
+    // const docPosition = editor.state.doc.line(1).from;
+    // const docPosition2 = editor.state.doc.line(1).from;
+    // const docPosition3 = editor.state.doc.line(1).from;
+    // editor.dispatch({effects: greeHighlight.of({pos: [docPosition]})});
 
     editorRef.current.appendChild(editor.dom);
     loadBreakpoint(editor, aktifTabItem.bppos);
@@ -499,27 +595,31 @@ export const Editor = () => {
       // curEditor.focus();
     }
   }
+
   const baseURL = "https://api.openai.com/v1/chat/completions";
   const [search, setSearch] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [hidden, setHidden] = React.useState(false);
 
   const handleKeyUp = (event: any) => {
+
     if (event.key === 'Enter') {
       if (editorRef.current === null) return;
       let curEditor = editorCache.get(aktifTabItem.filepath);
       const from =  curEditor.state.selection.ranges[0].from || 0 
       const to =  curEditor.state.selection.ranges[0].to || 0
       const doc = curEditor.state.sliceDoc(from,to)
-  
-      setLoading(true)
+      
+      setLoading(true);
+      
+
       axios
         .post(baseURL, {
           model: 'gpt-3.5-turbo',
           max_tokens: 300,
           temperature: 0.0,
           messages: [
-            {'role': 'user', 'content': "Answer in HTML. " + search + " : " + doc}
+            {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
           ],
         }, {
           headers: {
@@ -528,14 +628,57 @@ export const Editor = () => {
           }
         })
         .then((response) => {
-          setSearch('')
+          setSearch('');
+          
+          const diff = Diff.diffLines(doc, response.data.choices[0].message.content);
+          const mergedText = "\n" + diff.map((item:any) => item.value).join("");
+
+          console.log("diff", diff);
 
           curEditor.dispatch({
-            changes: {from: from, to: to, insert: response.data.choices[0].message.content + "\n"}
+            changes: {from:  from, to: to, insert: mergedText + "\n"}
           })
+
+          if(from < to){
+            let removeLines = [];
+            let addLines= [];
+            let countTemp = curEditor.state.doc.lineAt(from).number;
+
+            //temp
+            let removeTemp = [];
+            let addTemp= [];
+            
+
+            for (let i = 0; i < diff.length; i++) {
+              const item = diff[i];
+              if (item.removed === true){
+                for (let j = 1; j <= item.count; j++) {
+                  removeLines.push(curEditor.state.doc.line(countTemp + j).from);
+                  removeTemp.push(countTemp + j);
+                }
+                
+              }
+              if (item.added === true){
+                for (let j = 1; j <= item.count; j++) {
+                  addLines.push(curEditor.state.doc.line(countTemp + j).from);
+                  addTemp.push(countTemp + j);
+                }
+                
+              }
+              countTemp = countTemp + item.count;
+            }
+
+            console.log("remove Lines", removeTemp);
+            console.log("add lines", addTemp);
+
+            curEditor.dispatch({
+              effects: [greeHighlight.of({pos: addLines}), redHighlight.of({pos: removeLines}), buttonForm.of({pos: from})]
+            })
+          }
         })
         .finally(() => {
-          setLoading(false)
+          setLoading(false);
+          
           // const evt = new KeyboardEvent("keydown",{
           //   'key': 'Escape'
           // });
@@ -545,6 +688,7 @@ export const Editor = () => {
     }
   }
 
+
   const onSubmitKbar = (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log("submit kbar");
     
@@ -552,6 +696,15 @@ export const Editor = () => {
 
   const onChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value)
+  }
+
+  const handleKelik = () => {
+    let curEditor = editorCache.get(aktifTabItem.filepath);
+      const docPosition = curEditor.state.doc.line(1).from;
+      curEditor.dispatch({
+        changes: {from: 0, to: 0, insert: "percobaan kelik" + "\n"},
+        effects: greeHighlight.of({pos: [docPosition]})
+      })
   }
 
   return (
@@ -628,6 +781,15 @@ export const Editor = () => {
             </a>
           </li>
         )}
+
+          <li className="nav-item file-item aktif">
+            <span
+              onClick={() => handleKelik()}
+            >
+              Untitled{" "}
+            </span>
+          </li>
+
       </ul>
       <br />
       <section ref={editorRef} onClick={(e) => handleClickEditor(e)} />

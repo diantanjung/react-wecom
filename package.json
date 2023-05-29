@@ -20,6 +20,7 @@
     "axios": "^1.2.2",
     "bootstrap": "^5.2.3",
     "codemirror": "^6.0.1",
+    "diff": "^5.1.0",
     "kbar": "^0.1.0-beta.40",
     "local-echo": "github:wavesoft/local-echo",
     "mdi-react": "^9.0.0",
