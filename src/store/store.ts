@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import filetabReducer from "./feature/filetabSlice";
+import openAiSlice from "./feature/openAiSlice";
 
 export const store = configureStore({
   reducer: {
     filetabs: filetabReducer,
+    openai: openAiSlice,
   },
 });
 

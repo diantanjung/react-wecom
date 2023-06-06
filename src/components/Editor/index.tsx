@@ -1,54 +1,23 @@
-import React, { useEffect, useMemo } from "react";
-import {
-  EditorState,
-  Compartment,
-  StateField,
-  StateEffect,
-  RangeSet,
-  Extension,
-} from "@codemirror/state";
+import React, { createElement, useEffect, useMemo } from "react";
+import { EditorState, Compartment, StateField, StateEffect, RangeSet, Extension} from "@codemirror/state";
 import { useAppDispatch, useAppSelector } from "../../store/store";
-import {
-  addBreakpoint,
-  deleteFiletabItem,
-  goDefinition,
-  removeBreakpoint,
-  setAktifPath,
-} from "../../store/feature/filetabSlice";
+import { addBreakpoint, deleteFiletabItem, goDefinition, removeBreakpoint, setAktifPath } from "../../store/feature/filetabSlice";
 import "./Editor.css";
 import { go } from "@codemirror/legacy-modes/mode/go";
 import { rust } from "@codemirror/legacy-modes/mode/rust";
-import {
-  EditorView,
-  lineNumbers,
-  gutter,
-  GutterMarker,
-  keymap,
-  Decoration,
-  WidgetType
-} from "@codemirror/view";
-import {
-  StreamLanguage,
-  HighlightStyle,
-  syntaxHighlighting,
-} from "@codemirror/language";
+import { EditorView, lineNumbers, gutter, GutterMarker, keymap, Decoration, WidgetType } from "@codemirror/view";
+import { StreamLanguage, HighlightStyle } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { basicSetup } from "codemirror";
 import {indentWithTab} from "@codemirror/commands"
 import {solarizedLight } from "@uiw/codemirror-theme-solarized"
-import {
-  KBarProvider,
-  KBarPortal,
-  KBarPositioner,
-  KBarAnimator,
-  KBarSearch
-} from "kbar";
+import { KBarProvider, KBarPortal, KBarPositioner, KBarAnimator, KBarSearch } from "kbar";
 import axios from "axios";
 import { ColorRing } from  'react-loader-spinner'
+import { setFinalCodeAccept, setFinalCodeCancel, setResponseOpenAi } from "../../store/feature/openAiSlice";
 const Diff = require('diff');
 
 const editorCache = new Map();
-
 
 const breakpointMarker = new (class extends GutterMarker {
   toDOM() {
@@ -83,9 +52,6 @@ const breakpointLoadEffect = StateEffect.define<{ pos: number[] }>({
   map: (val, mapping) => ({ pos: val.pos.map((item) => mapping.mapPos(item)) }),
 });
 
-// const breakpointLoadEffect2 = StateEffect.define<{ bp: Breakpoint[] }>({
-//   map: (val, mapping) => ({ bp: val.bp.map( item => ({pos: mapping.mapPos(item.pos), linenumber:item.linenumber} as Breakpoint) ) }),
-// });
 
 const changedLineGutterMarker = /*@__PURE__*/new class extends GutterMarker {
   constructor() {
@@ -102,25 +68,6 @@ const redHighlightMark = Decoration.line({
   attributes: {style: 'background-color: #fdd3ce'}, // red
 });
 
-const acceptBtnType = new class extends WidgetType {
-  toDOM() {
-    let btn = document.createElement('button');
-    btn.innerHTML = `<i class="fa fa-check"></i>`;
-    btn.className = "btn btn-primary btn-sm btn-circle"; 
-    btn.onclick = function()
-    {
-        alert("accept");
-    }
-    return btn;
-  }
-}
-
-const acceptBtn = Decoration.widget({
-  widget: acceptBtnType
-});
-
-
-
 const brType = new class extends WidgetType {
   toDOM() {
     let br = document.createElement('br');
@@ -134,16 +81,27 @@ const br = Decoration.widget({
 
 const greeHighlight = StateEffect.define<{pos: number[]}>();
 const redHighlight = StateEffect.define<{pos: number[]}>();
+const clearEffect = StateEffect.define<{pos: number}>();
 const buttonForm = StateEffect.define<{pos: number}>();
 
-
+interface TFinalCode {
+  code: string;
+  start:  number;
+  end: number;
+}
 
 export const Editor = () => {
   const editorRef = React.useRef<HTMLElement>(null);
   // const [view, setView] = React.useState<EditorView | null>(null);
   const [views, setViews] = React.useState<Map<string, EditorView>>();
+  // const [finalCode, setFinalCode] = React.useState<Partial<TFinalCode>>({});
+  // const [acceptCode, setAcceptCode] = React.useState("accept");
+  // const [cancelCode, setCancelCode] = React.useState("cancel");
   const { filetabItems, cursor, aktifTabItem } = useAppSelector(
     (store) => store.filetabs
+  );
+  const { acceptCode, cancelCode, finalCode, endPos, startPos } = useAppSelector(
+    (store) => store.openai
   );
   const dispatch = useAppDispatch();
 
@@ -201,7 +159,34 @@ export const Editor = () => {
     []
   );
 
-  const cancelBtnType = new class extends WidgetType {
+  useEffect(() => {
+    // console.log("finalCode", finalCode);
+    // console.log("cancelCode", cancelCode);
+    // console.log("acceptCode", acceptCode);
+
+    if (startPos == undefined || startPos < 0) return;
+    if (endPos == undefined || endPos < 0) return;
+    if (finalCode == undefined || finalCode == "") return;
+
+    console.log("run final code", finalCode, startPos, endPos);
+
+    let curEditor = editorCache.get(aktifTabItem.filepath);
+    curEditor.dispatch({
+      changes: [
+        {from:  startPos, to: endPos}, 
+        {from:  startPos, to: endPos, insert: finalCode + "\n"} 
+      ],
+      effects: [clearEffect.of({pos: 0})]
+    })
+  },[finalCode]);
+  
+  
+  class cancelBtnTypeCls extends WidgetType {
+    
+    constructor(readonly checked: boolean) { super() }
+
+    eq(other: cancelBtnTypeCls) { return  true }
+
     toDOM() {
       let btn = document.createElement('button');
       btn.innerHTML = `<i class="fa fa-times"></i>`;
@@ -210,17 +195,40 @@ export const Editor = () => {
       btn.parentNode?.insertBefore(br, btn.nextSibling);
       btn.onclick = function()
       {
-        console.log("test cancel button form");
+        // setFinalCode({...finalCode, code: cancelCode});
+        dispatch(
+          setFinalCodeCancel()
+        )
+      }
+      return btn;
+    }
+  }
+
+  const cancelBtnType = new cancelBtnTypeCls(true)
+
+  const cancelBtn = Decoration.widget({
+    widget: cancelBtnType,
+  });
+
+  const acceptBtnType = new class extends WidgetType {
+    toDOM() {
+      let btn = document.createElement('button');
+      btn.innerHTML = `<i class="fa fa-check"></i>`;
+      btn.className = "btn btn-primary btn-sm btn-circle"; 
+      btn.onclick = function()
+      {
+        // setFinalCode({...finalCode, code: acceptCode});
+        dispatch(
+          setFinalCodeAccept()
+        )
       }
       return btn;
     }
   }
   
-  const cancelBtn = Decoration.widget({
-    widget: cancelBtnType
+  const acceptBtn = Decoration.widget({
+    widget: acceptBtnType
   });
-
-
 
 const lineHighlightField = StateField.define({
   create() {
@@ -249,6 +257,10 @@ const lineHighlightField = StateField.define({
           return redHighlightMark.range(item)
         });
         lines = lines.update({add: redDecor});
+      }
+
+      if(e.is(clearEffect)){
+        lines = Decoration.none;
       }
     }
     return lines;
@@ -486,12 +498,6 @@ const lineHighlightField = StateField.define({
     });
     editor.focus();
 
-    // test coba hightlight
-    // const docPosition = editor.state.doc.line(1).from;
-    // const docPosition2 = editor.state.doc.line(1).from;
-    // const docPosition3 = editor.state.doc.line(1).from;
-    // editor.dispatch({effects: greeHighlight.of({pos: [docPosition]})});
-
     editorRef.current.appendChild(editor.dom);
     loadBreakpoint(editor, aktifTabItem.bppos);
 
@@ -612,7 +618,6 @@ const lineHighlightField = StateField.define({
       
       setLoading(true);
       
-
       axios
         .post(baseURL, {
           model: 'gpt-3.5-turbo',
@@ -629,26 +634,43 @@ const lineHighlightField = StateField.define({
         })
         .then((response) => {
           setSearch('');
+
+          console.log("doc: ", doc);
+          console.log("response open ai: ", response.data.choices[0].message.content);
           
           const diff = Diff.diffLines(doc, response.data.choices[0].message.content);
           const mergedText = "\n" + diff.map((item:any) => item.value).join("");
 
           console.log("diff", diff);
 
+          dispatch(
+            setResponseOpenAi({
+              acceptCode: response.data.choices[0].message.content,
+              cancelCode: doc,
+              startPos: from,
+              endPos: to
+            })
+          );
+
           curEditor.dispatch({
             changes: {from:  from, to: to, insert: mergedText + "\n"}
           })
+
+          // setAcceptCode(response.data.choices[0].message.content);
+          // setCancelCode(doc);
+          // setFinalCode({...finalCode, start: from, end: to})
+
+          
+          
 
           if(from < to){
             let removeLines = [];
             let addLines= [];
             let countTemp = curEditor.state.doc.lineAt(from).number;
 
-            //temp
             let removeTemp = [];
-            let addTemp= [];
+            let addTemp = [];
             
-
             for (let i = 0; i < diff.length; i++) {
               const item = diff[i];
               if (item.removed === true){
@@ -656,24 +678,23 @@ const lineHighlightField = StateField.define({
                   removeLines.push(curEditor.state.doc.line(countTemp + j).from);
                   removeTemp.push(countTemp + j);
                 }
-                
               }
               if (item.added === true){
                 for (let j = 1; j <= item.count; j++) {
                   addLines.push(curEditor.state.doc.line(countTemp + j).from);
                   addTemp.push(countTemp + j);
                 }
-                
               }
               countTemp = countTemp + item.count;
             }
 
-            console.log("remove Lines", removeTemp);
-            console.log("add lines", addTemp);
+            console.log("remove lines: ", removeTemp);
+            console.log("add lines: ", addTemp);
 
             curEditor.dispatch({
               effects: [greeHighlight.of({pos: addLines}), redHighlight.of({pos: removeLines}), buttonForm.of({pos: from})]
-            })
+            });
+            
           }
         })
         .finally(() => {
@@ -688,23 +709,8 @@ const lineHighlightField = StateField.define({
     }
   }
 
-
-  const onSubmitKbar = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("submit kbar");
-    
-  }
-
   const onChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value)
-  }
-
-  const handleKelik = () => {
-    let curEditor = editorCache.get(aktifTabItem.filepath);
-      const docPosition = curEditor.state.doc.line(1).from;
-      curEditor.dispatch({
-        changes: {from: 0, to: 0, insert: "percobaan kelik" + "\n"},
-        effects: greeHighlight.of({pos: [docPosition]})
-      })
   }
 
   return (
@@ -781,15 +787,6 @@ const lineHighlightField = StateField.define({
             </a>
           </li>
         )}
-
-          <li className="nav-item file-item aktif">
-            <span
-              onClick={() => handleKelik()}
-            >
-              Untitled{" "}
-            </span>
-          </li>
-
       </ul>
       <br />
       <section ref={editorRef} onClick={(e) => handleClickEditor(e)} />
