@@ -84,19 +84,10 @@ const redHighlight = StateEffect.define<{pos: number[]}>();
 const clearEffect = StateEffect.define<{pos: number}>();
 const buttonForm = StateEffect.define<{pos: number}>();
 
-interface TFinalCode {
-  code: string;
-  start:  number;
-  end: number;
-}
-
 export const Editor = () => {
   const editorRef = React.useRef<HTMLElement>(null);
   // const [view, setView] = React.useState<EditorView | null>(null);
   const [views, setViews] = React.useState<Map<string, EditorView>>();
-  // const [finalCode, setFinalCode] = React.useState<Partial<TFinalCode>>({});
-  // const [acceptCode, setAcceptCode] = React.useState("accept");
-  // const [cancelCode, setCancelCode] = React.useState("cancel");
   const { filetabItems, cursor, aktifTabItem } = useAppSelector(
     (store) => store.filetabs
   );
@@ -115,7 +106,7 @@ export const Editor = () => {
           set = set.map(transaction.changes);
           for (let e of transaction.effects) {
             if (e.is(breakpointClickEffect)) {
-              console.log("run breakpointClickEffect");
+              // console.log("run breakpointClickEffect");
               if (e.value.on)
                 set = set.update({
                   add: [breakpointMarker.range(e.value.pos)],
@@ -124,7 +115,7 @@ export const Editor = () => {
             }
 
             if (e.is(cursorCurEffect)) {
-              console.log("run cursorCurEffect");
+              // console.log("run cursorCurEffect");
               // if (e.value.lastpos > 0 && e.value.on) {
               //   addMarker.unshift(breakpointMarker.range(e.value.lastpos));
               // }
@@ -136,7 +127,7 @@ export const Editor = () => {
             }
 
             if (e.is(cursorLastEffect)) {
-              console.log("run cursorLastEffect");
+              // console.log("run cursorLastEffect");
               set = set.update({
                 filter: (from) => from != e.value.lastpos,
                 add: e.value.on
@@ -146,7 +137,7 @@ export const Editor = () => {
             }
 
             if (e.is(breakpointLoadEffect)) {
-              console.log("run breakpointLoadEffect");
+              // console.log("run breakpointLoadEffect");
               set = set.update({
                 filter: (from) => !e.value.pos.includes(from),
                 add: e.value.pos.map((item) => breakpointMarker.range(item)),
@@ -160,15 +151,10 @@ export const Editor = () => {
   );
 
   useEffect(() => {
-    // console.log("finalCode", finalCode);
-    // console.log("cancelCode", cancelCode);
-    // console.log("acceptCode", acceptCode);
 
     if (startPos == undefined || startPos < 0) return;
     if (endPos == undefined || endPos < 0) return;
     if (finalCode == undefined || finalCode == "") return;
-
-    console.log("run final code", finalCode, startPos, endPos);
 
     let curEditor = editorCache.get(aktifTabItem.filepath);
     curEditor.dispatch({
@@ -195,7 +181,6 @@ export const Editor = () => {
       btn.parentNode?.insertBefore(br, btn.nextSibling);
       btn.onclick = function()
       {
-        // setFinalCode({...finalCode, code: cancelCode});
         dispatch(
           setFinalCodeCancel()
         )
@@ -217,7 +202,6 @@ export const Editor = () => {
       btn.className = "btn btn-primary btn-sm btn-circle"; 
       btn.onclick = function()
       {
-        // setFinalCode({...finalCode, code: acceptCode});
         dispatch(
           setFinalCodeAccept()
         )
@@ -238,13 +222,13 @@ const lineHighlightField = StateField.define({
     lines = lines.map(tr.changes);
     for (let e of tr.effects) {
       if (e.is(buttonForm)) {
-        console.log("buttonForm effect");
+        // console.log("buttonForm effect");
         // lines = Decoration.none;
         lines = lines.update({add: [acceptBtn.range(e.value.pos), cancelBtn.range(e.value.pos), br.range(e.value.pos)]});
       }
 
       if (e.is(greeHighlight)) {
-        console.log("greeHighlight effect");
+        // console.log("greeHighlight effect");
         const greenDecor = e.value.pos.map((item) => {
           return greenHighlightMark.range(item)
         });
@@ -252,7 +236,7 @@ const lineHighlightField = StateField.define({
       }
 
       if (e.is(redHighlight)) {
-        console.log("redHighlight effect");
+        // console.log("redHighlight effect");
         const redDecor = e.value.pos.map((item) => {
           return redHighlightMark.range(item)
         });
@@ -401,8 +385,6 @@ const lineHighlightField = StateField.define({
     // let stateIsGo = tr.startState.facet(language) === StreamLanguage.define(go);
     // if (docIsGo == stateIsGo) return null;
 
-    console.log("auto lang");
-
     return {
       effects: languageConf.reconfigure(
         docIsGo ? StreamLanguage.define(go) : StreamLanguage.define(rust)
@@ -466,10 +448,7 @@ const lineHighlightField = StateField.define({
 
   useEffect(() => {
     if (editorRef.current === null) return;
-
-    console.log("aktifTabItem.filepath", aktifTabItem.filepath);
     
-
     let editor = editorCache.get(aktifTabItem.filepath);
     if (!editor) {
       // Cache miss --> mint a new editor.
@@ -579,7 +558,6 @@ const lineHighlightField = StateField.define({
     
     if(e.ctrlKey){
       const offset = curEditor.posAtCoords({x: e.pageX, y: e.pageY}) + 16;
-      console.log("offset:", offset);
       dispatch(
         goDefinition({
           filepath: aktifTabItem.filepath,
@@ -634,39 +612,31 @@ const lineHighlightField = StateField.define({
         })
         .then((response) => {
           setSearch('');
-
-          console.log("doc: ", doc);
-          console.log("response open ai: ", response.data.choices[0].message.content);
           
           const diff = Diff.diffLines(doc, response.data.choices[0].message.content);
           const mergedText = "\n" + diff.map((item:any) => item.value).join("");
+          
+          curEditor.dispatch({
+            changes: {from:  from, to: to, insert: mergedText + "\n"}
+          })
 
-          console.log("diff", diff);
+          let countTemp = curEditor.state.doc.lineAt(from).number;
+          const lenMergedText = mergedText.split(/\r\n|\r|\n/).length;
+          const endPosition = curEditor.state.doc.line(countTemp + lenMergedText).from;
 
           dispatch(
             setResponseOpenAi({
               acceptCode: response.data.choices[0].message.content,
               cancelCode: doc,
               startPos: from,
-              endPos: to
+              endPos: endPosition
             })
           );
-
-          curEditor.dispatch({
-            changes: {from:  from, to: to, insert: mergedText + "\n"}
-          })
-
-          // setAcceptCode(response.data.choices[0].message.content);
-          // setCancelCode(doc);
-          // setFinalCode({...finalCode, start: from, end: to})
-
-          
-          
 
           if(from < to){
             let removeLines = [];
             let addLines= [];
-            let countTemp = curEditor.state.doc.lineAt(from).number;
+            
 
             let removeTemp = [];
             let addTemp = [];
@@ -687,9 +657,6 @@ const lineHighlightField = StateField.define({
               }
               countTemp = countTemp + item.count;
             }
-
-            console.log("remove lines: ", removeTemp);
-            console.log("add lines: ", addTemp);
 
             curEditor.dispatch({
               effects: [greeHighlight.of({pos: addLines}), redHighlight.of({pos: removeLines}), buttonForm.of({pos: from})]
