@@ -3,6 +3,8 @@ import Menu from "../components/Menu";
 import axiosInstance from "../helpers/axiosInstance";
 import RightSection from "../components/RightSection";
 import LeftSection from "../components/LeftSection";
+import Notification from "../components/Notification";
+import { useAppSelector } from "../store/store";
 
 type HomeProps = {
   username: string;
@@ -30,6 +32,10 @@ const Home = ({ username, setUsername }: HomeProps) => {
   const [lastbp, setLastbp] = useState(0);
 
   const [filetab, setFiletab] = useState([]);
+
+  const { notifStatus } = useAppSelector(
+    (store) => store.openai
+  );
 
   // window.handleLogin = async (googleData) => {
   //   axiosInstance()
@@ -81,6 +87,11 @@ const Home = ({ username, setUsername }: HomeProps) => {
               dirpath={dirpath}
             />
           </div>
+          {notifStatus &&
+            <div className={"notification-wrapper"}>
+              <Notification />
+            </div>
+          }
         </div>
       </div>
       <Menu activeMenu={activeMenu} setActiveMenu={setActiveMenu} setUsername={setUsername} />

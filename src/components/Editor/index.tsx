@@ -14,7 +14,7 @@ import {solarizedLight } from "@uiw/codemirror-theme-solarized"
 import { KBarProvider, KBarPortal, KBarPositioner, KBarAnimator, KBarSearch } from "kbar";
 import axios from "axios";
 import { ColorRing } from  'react-loader-spinner'
-import { setFinalCodeAccept, setFinalCodeCancel, setResponseOpenAi } from "../../store/feature/openAiSlice";
+import {  setFinalCodeAccept, setFinalCodeCancel, setResponseOpenAi } from "../../store/feature/openAiSlice";
 const Diff = require('diff');
 
 const editorCache = new Map();
@@ -88,10 +88,10 @@ export const Editor = () => {
   const editorRef = React.useRef<HTMLElement>(null);
   // const [view, setView] = React.useState<EditorView | null>(null);
   const [views, setViews] = React.useState<Map<string, EditorView>>();
-  const { filetabItems, cursor, aktifTabItem } = useAppSelector(
+  const { filetabItems, cursor, aktifTabItem, } = useAppSelector(
     (store) => store.filetabs
   );
-  const { acceptCode, cancelCode, finalCode, endPos, startPos } = useAppSelector(
+  const { finalCode, endPos, startPos } = useAppSelector(
     (store) => store.openai
   );
   const dispatch = useAppDispatch();
@@ -602,7 +602,8 @@ const lineHighlightField = StateField.define({
           max_tokens: 300,
           temperature: 0.0,
           messages: [
-            {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
+            // {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
+            {'role': 'user', 'content': search + " : " + doc}
           ],
         }, {
           headers: {
@@ -612,6 +613,7 @@ const lineHighlightField = StateField.define({
         })
         .then((response) => {
           setSearch('');
+          console.log("response: ", response.data);
           
           const diff = Diff.diffLines(doc, response.data.choices[0].message.content);
           const mergedText = "\n" + diff.map((item:any) => item.value).join("");
@@ -661,6 +663,8 @@ const lineHighlightField = StateField.define({
             curEditor.dispatch({
               effects: [greeHighlight.of({pos: addLines}), redHighlight.of({pos: removeLines}), buttonForm.of({pos: from})]
             });
+
+            
             
           }
         })

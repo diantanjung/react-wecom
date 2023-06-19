@@ -6,7 +6,6 @@ import RunFunc from "./pages/RunFunc";
 import Psaux from "./pages/Psaux";
 import "./App.css";
 import {Route, Routes } from "react-router-dom"
-import Openai from './pages/Openai';
 
 function App() {
   const [username, setUsername] = useState(localStorage.username || 'guest');
