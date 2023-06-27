@@ -8,6 +8,7 @@ interface Openai{
     acceptCode: string;
 
     notifStatus: boolean;
+    notifText: string;
 }
 
 const initialState = {
@@ -16,7 +17,8 @@ const initialState = {
     endPos: 0,
     cancelCode: "",
     acceptCode: "",
-    notifStatus: false
+    notifStatus: false,
+    notifText: ""
 } as Openai
 
 const openAiSlice = createSlice({
@@ -44,16 +46,18 @@ const openAiSlice = createSlice({
             state.endPos = payload.endPos
             state.acceptCode = payload.acceptCode
             state.cancelCode = payload.cancelCode
-            state.notifStatus = true
         },
         setNotifStatus: (state, { payload }) => {
             state.notifStatus = payload.notifStatus
+        },
+        setNotifText: (state, { payload }) => {
+            state.notifText = payload.notifText
         }
     }
 })
 
 export const {
-    setFinalCodeCancel, setFinalCodeAccept, setResponseOpenAi, setNotifStatus
+    setFinalCodeCancel, setFinalCodeAccept, setResponseOpenAi, setNotifStatus, setNotifText
   } = openAiSlice.actions;
   
   export default openAiSlice.reducer;

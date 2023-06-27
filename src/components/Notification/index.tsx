@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from "../../store/store";
 import "./Notification.css";
 
 const Notification = () => {
-    const { acceptCode } = useAppSelector(
+    const { notifText } = useAppSelector(
         (store) => store.openai
       );
     const dispatch = useAppDispatch();
@@ -12,7 +12,7 @@ const Notification = () => {
         <div className="notification-item">
             <button onClick={() => dispatch(setNotifStatus({notifStatus: false}))}>X</button>
             <h4>Open AI Response</h4>
-            <ReactMarkdown>{acceptCode}</ReactMarkdown>
+            <ReactMarkdown>{notifText}</ReactMarkdown>
         </div>
     )
 }

@@ -14,7 +14,7 @@ import {solarizedLight } from "@uiw/codemirror-theme-solarized"
 import { KBarProvider, KBarPortal, KBarPositioner, KBarAnimator, KBarSearch } from "kbar";
 import axios from "axios";
 import { ColorRing } from  'react-loader-spinner'
-import {  setFinalCodeAccept, setFinalCodeCancel, setResponseOpenAi } from "../../store/feature/openAiSlice";
+import {  setFinalCodeAccept, setFinalCodeCancel, setNotifText, setResponseOpenAi } from "../../store/feature/openAiSlice";
 const Diff = require('diff');
 
 const editorCache = new Map();
@@ -151,6 +151,9 @@ export const Editor = () => {
   );
 
   useEffect(() => {
+
+    console.log("test: ", startPos, endPos, finalCode);
+    
 
     if (startPos == undefined || startPos < 0) return;
     if (endPos == undefined || endPos < 0) return;
@@ -602,8 +605,7 @@ const lineHighlightField = StateField.define({
           max_tokens: 300,
           temperature: 0.0,
           messages: [
-            // {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
-            {'role': 'user', 'content': search + " : " + doc}
+            {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
           ],
         }, {
           headers: {
@@ -615,62 +617,74 @@ const lineHighlightField = StateField.define({
           setSearch('');
           console.log("response: ", response.data);
           
-          const diff = Diff.diffLines(doc, response.data.choices[0].message.content);
-          const mergedText = "\n" + diff.map((item:any) => item.value).join("");
+          const resContent = response.data.choices[0].message.content;
           
-          curEditor.dispatch({
-            changes: {from:  from, to: to, insert: mergedText + "\n"}
-          })
 
-          let countTemp = curEditor.state.doc.lineAt(from).number;
-          const lenMergedText = mergedText.split(/\r\n|\r|\n/).length;
-          const endPosition = curEditor.state.doc.line(countTemp + lenMergedText).from;
-
-          dispatch(
-            setResponseOpenAi({
-              acceptCode: response.data.choices[0].message.content,
-              cancelCode: doc,
-              startPos: from,
-              endPos: endPosition
-            })
-          );
-
-          if(from < to){
-            let removeLines = [];
-            let addLines= [];
-            
-
-            let removeTemp = [];
-            let addTemp = [];
-            
-            for (let i = 0; i < diff.length; i++) {
-              const item = diff[i];
-              if (item.removed === true){
-                for (let j = 1; j <= item.count; j++) {
-                  removeLines.push(curEditor.state.doc.line(countTemp + j).from);
-                  removeTemp.push(countTemp + j);
-                }
-              }
-              if (item.added === true){
-                for (let j = 1; j <= item.count; j++) {
-                  addLines.push(curEditor.state.doc.line(countTemp + j).from);
-                  addTemp.push(countTemp + j);
-                }
-              }
-              countTemp = countTemp + item.count;
-            }
+          // todo: if text show in notification
+          const regIsCode = /\(\)|\<\/|\/\>/g;
+          const regHasMarkDown = /```/;
+          if(regIsCode.test(resContent) && !regHasMarkDown.test(resContent)){
+            // tampilkan di editor
+            console.log("Tampilkan di editor!");
+            const diff = Diff.diffLines(doc, resContent);
+            const mergedText = diff.map((item:any) => item.value).join("");
 
             curEditor.dispatch({
-              effects: [greeHighlight.of({pos: addLines}), redHighlight.of({pos: removeLines}), buttonForm.of({pos: from})]
-            });
+              changes: {from:  from, to: to, insert: mergedText + "\n"}
+            })
 
-            
-            
+            let countTemp = curEditor.state.doc.lineAt(from).number;
+            const lenMergedText = mergedText.split(/\r\n|\r|\n/).length;
+            const endPosition = curEditor.state.doc.line(countTemp + lenMergedText).from;
+
+            dispatch(
+              setResponseOpenAi({
+                acceptCode: resContent,
+                cancelCode: doc,
+                startPos: from,
+                endPos: endPosition
+              })
+            );
+  
+            if(from < to){
+              let removeLines = [];
+              let addLines= [];
+              
+  
+              let removeTemp = [];
+              let addTemp = [];
+              
+              for (let i = 0; i < diff.length; i++) {
+                const item = diff[i];
+                if (item.removed === true){
+                  for (let j = 1; j <= item.count; j++) {
+                    removeLines.push(curEditor.state.doc.line(countTemp + j).from);
+                    removeTemp.push(countTemp + j);
+                  }
+                }
+                if (item.added === true){
+                  for (let j = 1; j <= item.count; j++) {
+                    addLines.push(curEditor.state.doc.line(countTemp + j).from);
+                    addTemp.push(countTemp + j);
+                  }
+                }
+                countTemp = countTemp + item.count;
+              }
+  
+              curEditor.dispatch({
+                effects: [greeHighlight.of({pos: addLines}), redHighlight.of({pos: removeLines}), buttonForm.of({pos: from})]
+              });
+            }
+          }else{
+            // tampilkan di notifikasi
+            console.log("Tampilkan di notifikasi!");
+            dispatch(
+              setNotifText({notifText: resContent})
+            );
           }
         })
         .finally(() => {
           setLoading(false);
-          
           // const evt = new KeyboardEvent("keydown",{
           //   'key': 'Escape'
           // });
