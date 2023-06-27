@@ -52,6 +52,7 @@ const openAiSlice = createSlice({
         },
         setNotifText: (state, { payload }) => {
             state.notifText = payload.notifText
+            state.notifStatus = true
         }
     }
 })

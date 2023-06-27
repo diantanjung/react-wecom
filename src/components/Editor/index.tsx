@@ -151,10 +151,6 @@ export const Editor = () => {
   );
 
   useEffect(() => {
-
-    console.log("test: ", startPos, endPos, finalCode);
-    
-
     if (startPos == undefined || startPos < 0) return;
     if (endPos == undefined || endPos < 0) return;
     if (finalCode == undefined || finalCode == "") return;
@@ -605,7 +601,8 @@ const lineHighlightField = StateField.define({
           max_tokens: 300,
           temperature: 0.0,
           messages: [
-            {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
+            // {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
+            {'role': 'user', 'content': search + " : " + doc}
           ],
         }, {
           headers: {
@@ -690,6 +687,24 @@ const lineHighlightField = StateField.define({
           // });
           // const evt = new Event("click");
           // dispatchEvent(evt);
+        })
+        .catch(function (error) {
+          if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.log(error.response.data);
+            console.log(error.response.status);
+            console.log(error.response.headers);
+          } else if (error.request) {
+            // The request was made but no response was received
+            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+            // http.ClientRequest in node.js
+            console.log(error.request);
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            console.log('Error', error.message);
+          }
+          console.log(error.config);
         });
     }
   }
