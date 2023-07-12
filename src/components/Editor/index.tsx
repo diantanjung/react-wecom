@@ -713,6 +713,12 @@ const lineHighlightField = StateField.define({
     setSearch(event.target.value)
   }
 
+  const searchResult = (file: {file: Breakpoint}) => {
+    return (
+      <div />
+    )
+  }
+
   return (
     <KBarProvider>
       <KBarPortal>

@@ -10,10 +10,11 @@
     border-radius: 10px;
     overflow: auto;
     margin-bottom: 20px;
+    padding-right: 15px;
     animation: SlideLeft 0.4s;
     animation-fill-mode: forwards;
     width: 600px;
-    height: 800px;
+    min-height: 800px;
     background-color: white;
 }
 
