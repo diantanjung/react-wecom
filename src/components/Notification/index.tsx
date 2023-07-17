@@ -4,6 +4,7 @@ import {dark} from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { setNotifStatus } from "../../store/feature/openAiSlice";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import "./Notification.css";
+import Code from "../Code";
 
 const Notification = () => {
     const { notifText } = useAppSelector(
@@ -20,13 +21,7 @@ const Notification = () => {
                 code({node, inline, className, children, ...props}) {
                     const match = /language-(\w+)/.exec(className || '')
                     return !inline && match ? (
-                    <SyntaxHighlighter
-                        {...props}
-                        children={String(children).replace(/\n$/, '')}
-                        style={dark}
-                        language={match[1]}
-                        PreTag="div"
-                    />
+                    <Code {...props} children={String(children).replace(/\n$/, '')} language={match[1]} />
                     ) : (
                     <code {...props} className={className}>
                         {children}

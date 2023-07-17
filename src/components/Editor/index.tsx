@@ -582,7 +582,6 @@ const lineHighlightField = StateField.define({
   const baseURL = "https://api.openai.com/v1/chat/completions";
   const [search, setSearch] = React.useState('');
   const [loading, setLoading] = React.useState(false);
-  const [hidden, setHidden] = React.useState(false);
 
   const handleKeyUp = (event: any) => {
 

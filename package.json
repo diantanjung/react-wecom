@@ -73,6 +73,7 @@
     ]
   },
   "devDependencies": {
+    "@types/react-copy-to-clipboard": "^5.0.4",
     "@types/react-syntax-highlighter": "^15.5.7",
     "babel-plugin-prismjs": "^2.1.0"
   }

@@ -1,0 +1,16 @@
+/* Code */
+.code {
+    position: relative;
+    margin: 0 15px 0 15px;
+  }
+  .code .copy-icon {
+    position: absolute;
+    top: 0.5rem;
+    right: 1rem;
+    z-index: 5;
+    color: azure;
+  }
+
+  .code .copy-icon:hover {
+    color: gray;
+  }
