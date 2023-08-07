@@ -1,75 +1,91 @@
 .notification-wrapper {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    width: 700px;
-    height: 100%;
-    overflow: auto;
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 700px;
+  height: 100%;
+  overflow: auto;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 .notification-item {
-    box-shadow: 0 0 10px rgba(0,0,0, 0.3);
-    border-radius: 10px;
-    margin-bottom: 20px;
-    animation: SlideLeft 0.4s;
-    animation-fill-mode: forwards;
-    width: 600px;
-    background-color: white;
-    
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  margin-bottom: 20px;
+  animation: SlideLeft 0.4s;
+  animation-fill-mode: forwards;
+  width: 600px;
+  background-color: white;
 }
 
-@keyframes SlideLeft {
-    0% {
-        margin-left: 120%;
-    }
+.notification-assistant {
+  background-color: #e1dcb5;
+}
 
-    100% {
-        margin-left: 0;
-    }
+.notification-user {
+  background-color: white;
+}
+
+.notification-row {
+  padding: 10px;
+}
+
+.notification-btn {
+  background-color: #65d266;
+}
+
+
+@keyframes SlideLeft {
+  0% {
+    margin-left: 120%;
+  }
+
+  100% {
+    margin-left: 0;
+  }
 }
 
 @keyframes SlideRight {
-    0% {
-        margin-left: 0;
-    }
+  0% {
+    margin-left: 0;
+  }
 
-    100% {
-        margin-left: 120%;
-    }
+  100% {
+    margin-left: 120%;
+  }
 }
 
 .notification-item.exit {
-    animation: SlideRight 0.4s;
-    animation-fill-mode: forwards;
+  animation: SlideRight 0.4s;
+  animation-fill-mode: forwards;
 }
 
 .notification-item p {
-    margin: 0;
-    padding: 10px;
+  margin: 0;
+  padding: 10px;
 }
 
 .notification-item h4 {
-    margin: 0;
-    padding: 10px;
-    font-size: 13pt;
-    font-weight: 500;
+  margin: 0;
+  padding: 10px;
+  font-size: 13pt;
+  font-weight: 500;
 }
 
 .notification-item .bar {
-    height: 10px;
+  height: 10px;
 }
 
 .notification-item.success .bar {
-    background-color: #65d266;
+  background-color: #65d266;
 }
 
 .notification-item.error .bar {
-    background-color: red;
+  background-color: red;
 }
 
-.notification-item button {
+.notification-item .close-btn {
   float: right;
   background: none;
   border: none;
@@ -77,4 +93,26 @@
   opacity: 0.8;
   cursor: pointer;
   margin-right: 5px;
+}
+
+.loader {
+  border: 3px solid #f3f3f3; /* Light grey */
+  border-top: 3px solid #9e9e9e; /* Blue */
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

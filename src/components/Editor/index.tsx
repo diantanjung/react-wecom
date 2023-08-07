@@ -1,4 +1,4 @@
-import React, { createElement, useEffect, useMemo } from "react";
+import React, { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { EditorState, Compartment, StateField, StateEffect, RangeSet, Extension} from "@codemirror/state";
 import { useAppDispatch, useAppSelector } from "../../store/store";
 import { addBreakpoint, deleteFiletabItem, goDefinition, removeBreakpoint, setAktifPath } from "../../store/feature/filetabSlice";
@@ -14,7 +14,7 @@ import {solarizedLight } from "@uiw/codemirror-theme-solarized"
 import { KBarProvider, KBarPortal, KBarPositioner, KBarAnimator, KBarSearch } from "kbar";
 import axios from "axios";
 import { ColorRing } from  'react-loader-spinner'
-import {  setFinalCodeAccept, setFinalCodeCancel, setNotifText, setResponseOpenAi } from "../../store/feature/openAiSlice";
+import {  generateCode, setFinalCodeAccept, setFinalCodeCancel, setResponseOpenAi } from "../../store/feature/openAiSlice";
 const Diff = require('diff');
 
 const editorCache = new Map();
@@ -85,13 +85,17 @@ const clearEffect = StateEffect.define<{pos: number}>();
 const buttonForm = StateEffect.define<{pos: number}>();
 
 export const Editor = () => {
-  const editorRef = React.useRef<HTMLElement>(null);
+  const editorRef = useRef<HTMLElement>(null);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
   // const [view, setView] = React.useState<EditorView | null>(null);
-  const [views, setViews] = React.useState<Map<string, EditorView>>();
+  const [views, setViews] = useState<Map<string, EditorView>>();
+  
+
   const { filetabItems, cursor, aktifTabItem, } = useAppSelector(
     (store) => store.filetabs
   );
-  const { finalCode, endPos, startPos } = useAppSelector(
+  const { finalCode, endPos, startPos, codeMessages } = useAppSelector(
     (store) => store.openai
   );
   const dispatch = useAppDispatch();
@@ -579,10 +583,12 @@ const lineHighlightField = StateField.define({
     }
   }
 
-  const baseURL = "https://api.openai.com/v1/chat/completions";
-  const [search, setSearch] = React.useState('');
-  const [loading, setLoading] = React.useState(false);
+  
 
+  const onChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value)
+  }
+  
   const handleKeyUp = (event: any) => {
 
     if (event.key === 'Enter') {
@@ -590,133 +596,95 @@ const lineHighlightField = StateField.define({
       let curEditor = editorCache.get(aktifTabItem.filepath);
       const from =  curEditor.state.selection.ranges[0].from || 0 
       const to =  curEditor.state.selection.ranges[0].to || 0
-      const doc = curEditor.state.sliceDoc(from,to)
+      let doc = curEditor.state.sliceDoc(from,to);
+      if (doc === ""){
+        doc = curEditor.state.doc
+      }
       
       setLoading(true);
-      
-      axios
-        .post(baseURL, {
-          model: 'gpt-3.5-turbo',
-          max_tokens: 300,
-          temperature: 0.0,
-          messages: [
-            // {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
-            {'role': 'user', 'content': search + " : " + doc}
-          ],
-        }, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}` 
-          }
-        })
-        .then((response) => {
-          setSearch('');
-          console.log("response: ", response.data);
-          
-          const resContent = response.data.choices[0].message.content;
-          
 
-          // todo: if text show in notification
-          const regIsCode = /\(\)|\<\/|\/\>/g;
-          const regHasMarkDown = /```/;
-          if(regIsCode.test(resContent) && !regHasMarkDown.test(resContent)){
-            // tampilkan di editor
-            console.log("Tampilkan di editor!");
-            const diff = Diff.diffLines(doc, resContent);
-            const mergedText = diff.map((item:any) => item.value).join("");
-
-            curEditor.dispatch({
-              changes: {from:  from, to: to, insert: mergedText + "\n"}
-            })
-
-            let countTemp = curEditor.state.doc.lineAt(from).number;
-            const lenMergedText = mergedText.split(/\r\n|\r|\n/).length;
-            const endPosition = curEditor.state.doc.line(countTemp + lenMergedText).from;
-
-            dispatch(
-              setResponseOpenAi({
-                acceptCode: resContent,
-                cancelCode: doc,
-                startPos: from,
-                endPos: endPosition
-              })
-            );
-  
-            if(from < to){
-              let removeLines = [];
-              let addLines= [];
-              
-  
-              let removeTemp = [];
-              let addTemp = [];
-              
-              for (let i = 0; i < diff.length; i++) {
-                const item = diff[i];
-                if (item.removed === true){
-                  for (let j = 1; j <= item.count; j++) {
-                    removeLines.push(curEditor.state.doc.line(countTemp + j).from);
-                    removeTemp.push(countTemp + j);
-                  }
-                }
-                if (item.added === true){
-                  for (let j = 1; j <= item.count; j++) {
-                    addLines.push(curEditor.state.doc.line(countTemp + j).from);
-                    addTemp.push(countTemp + j);
-                  }
-                }
-                countTemp = countTemp + item.count;
-              }
-  
-              curEditor.dispatch({
-                effects: [greeHighlight.of({pos: addLines}), redHighlight.of({pos: removeLines}), buttonForm.of({pos: from})]
-              });
-            }
-          }else{
-            // tampilkan di notifikasi
-            console.log("Tampilkan di notifikasi!");
-            dispatch(
-              setNotifText({notifText: resContent})
-            );
-          }
-        })
-        .finally(() => {
-          setLoading(false);
-          // const evt = new KeyboardEvent("keydown",{
-          //   'key': 'Escape'
-          // });
-          // const evt = new Event("click");
-          // dispatchEvent(evt);
-        })
-        .catch(function (error) {
-          if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            console.log(error.response.data);
-            console.log(error.response.status);
-            console.log(error.response.headers);
-          } else if (error.request) {
-            // The request was made but no response was received
-            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-            // http.ClientRequest in node.js
-            console.log(error.request);
-          } else {
-            // Something happened in setting up the request that triggered an Error
-            console.log('Error', error.message);
-          }
-          console.log(error.config);
-        });
+      dispatch(
+        generateCode({with_context: false, message: {role: 'user', content: "Please provide answer in code only. " + search + " : " + doc}})
+      )
     }
   }
 
-  const onChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value)
-  }
+  useEffect(() => {
+    const lastMessage = codeMessages.at(-1);
 
-  const searchResult = (file: {file: Breakpoint}) => {
-    return (
-      <div />
-    )
-  }
+    if(lastMessage){
+      setSearch('');
+
+      if (editorRef.current === null) return;
+      let curEditor = editorCache.get(aktifTabItem.filepath);
+      const from =  curEditor.state.selection.ranges[0].from || 0 
+      const to =  curEditor.state.selection.ranges[0].to || 0
+      const doc = curEditor.state.sliceDoc(from,to)
+
+      let resContent = lastMessage?.content || "";
+      const resRole = lastMessage?.role || "";
+
+      // todo: if text show in notification
+      const regIsCode = /\(\)|\<\/|\/\>/g;
+      const regHasMarkDown = /```/;
+      if(!regIsCode.test(resContent) && regHasMarkDown.test(resContent)){
+        resContent = "// " + resContent;
+      }
+
+      // tampilkan di editor
+      const diff = Diff.diffLines(doc, resContent);
+      const mergedText = diff.map((item:any) => item.value).join("");
+
+      curEditor.dispatch({
+        changes: {from:  from, to: to, insert: mergedText + "\n"}
+      })
+
+      let countTemp = curEditor.state.doc.lineAt(from).number;
+      const lenMergedText = mergedText.split(/\r\n|\r|\n/).length;
+      const endPosition = curEditor.state.doc.line(countTemp + lenMergedText).from;
+
+      dispatch(
+        setResponseOpenAi({
+          acceptCode: resContent,
+          cancelCode: doc,
+          startPos: from,
+          endPos: endPosition
+        })
+      );
+
+      if(from < to){
+        let removeLines = [];
+        let addLines= [];
+
+        let removeTemp = [];
+        let addTemp = [];
+        
+        for (let i = 0; i < diff.length; i++) {
+          const item = diff[i];
+          if (item.removed === true){
+            for (let j = 1; j <= item.count; j++) {
+              removeLines.push(curEditor.state.doc.line(countTemp + j).from);
+              removeTemp.push(countTemp + j);
+            }
+          }
+          if (item.added === true){
+            for (let j = 1; j <= item.count; j++) {
+              addLines.push(curEditor.state.doc.line(countTemp + j).from);
+              addTemp.push(countTemp + j);
+            }
+          }
+          countTemp = countTemp + item.count;
+        }
+
+        curEditor.dispatch({
+          effects: [greeHighlight.of({pos: addLines}), redHighlight.of({pos: removeLines}), buttonForm.of({pos: from})]
+        });
+      }
+      setLoading(false);
+    }
+    
+  }, [codeMessages]) 
+
 
   return (
     <KBarProvider>

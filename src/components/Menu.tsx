@@ -5,6 +5,8 @@ import { RiCloseLine } from "react-icons/ri";
 import GithubIcon from "mdi-react/GithubIcon";
 import { GoogleLogin } from '@react-oauth/google';
 import axiosInstance from '../helpers/axiosInstance';
+import { setNotifStatus } from '../store/feature/openAiSlice';
+import { useAppDispatch, useAppSelector } from '../store/store';
 
 type MenuProps = {
     activeMenu: string
@@ -14,6 +16,10 @@ type MenuProps = {
 
 const Menu = ({ activeMenu, setActiveMenu, setUsername }: MenuProps) => {
     const [isOpen, setIsOpen] = useState(false);
+    const { notifStatus } = useAppSelector(
+        (store) => store.openai
+      );
+    const dispatch = useAppDispatch();
 
     const logout = () => {
         localStorage.removeItem("access_token");
@@ -51,6 +57,11 @@ const Menu = ({ activeMenu, setActiveMenu, setUsername }: MenuProps) => {
                     <li className={activeMenu == 'debug' ? "active" : ""}>
                         <a onClick={() => setActiveMenu('debug')} className="text-menu"><span className="fa fa-bug text-menu"></span>Debug</a>
                     </li>
+                    <li className={activeMenu == 'chatai' ? "active" : ""}>
+                        <a onClick={() => {
+                            dispatch(setNotifStatus({notifStatus: !notifStatus}))
+                        }} className="text-menu"><span className="fa fa-comment text-menu"></span>Chat AI</a>
+                    </li>
                 </ul>
 
                 <div className="footer">
@@ -77,9 +88,9 @@ const Menu = ({ activeMenu, setActiveMenu, setUsername }: MenuProps) => {
                                 theme='outline'
                                 text='signin_with'
                                 shape='circle'
-                                width='280'
+                                width={280}                                
                                 onSuccess={credentialResponse => {
-                                    console.log(credentialResponse);
+                                    console.log("credentialResponse",credentialResponse);
                                     axiosInstance()
                                         .post(
                                             "/users/login-google",
