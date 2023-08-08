@@ -31,7 +31,7 @@ const initialState = {
     bppos: [],
     bpln: [],
     code: " ",
-    language: "go",
+    language: "html",
     cursorln: 1,
   }],
   cursor: {
@@ -47,7 +47,7 @@ const initialState = {
     bppos: [],
     bpln: [],
     code: " ",
-    language: "go",
+    language: "html",
     cursorln: 1,
   },
 } as FileTabItems;
