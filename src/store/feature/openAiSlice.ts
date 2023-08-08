@@ -109,6 +109,9 @@ export const setMessage = createAsyncThunk<
         }else{
             newMessages = [params.message]
         }
+
+        //limit messages
+        newMessages = newMessages.slice(-6);
         
         try {
             const baseURL = "https://api.openai.com/v1/chat/completions";
@@ -149,6 +152,9 @@ export const generateCode = createAsyncThunk<
         }else{
             newMessages = [params.message]
         }
+
+        //limit messages
+        newMessages = newMessages.slice(-4);
         
         try {
             const baseURL = "https://api.openai.com/v1/chat/completions";
@@ -174,6 +180,7 @@ export const generateCode = createAsyncThunk<
         }
     }
 );
+
 
 export const {
     setFinalCodeCancel, setFinalCodeAccept, setResponseOpenAi, setNotifStatus
