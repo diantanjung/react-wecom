@@ -604,7 +604,7 @@ const lineHighlightField = StateField.define({
       setLoading(true);
 
       dispatch(
-        generateCode({with_context: false, message: {role: 'user', content: "Please provide answer in code only. " + search + " : " + doc}})
+        generateCode({with_context: false, message: {role: 'user', content: "Answer in " + aktifTabItem.language + " code. " + search + " : " + doc}})
       )
     }
   }
