@@ -4,6 +4,7 @@ import { Editor } from "./Editor";
 import FilesSection from "./FilesSection";
 import HelpSection from "./HelpSection";
 import OutputSection from "./OutputSection";
+import Editor3 from "./Editor3";
 
 type LeftSectionProps = {
   activeMenu: string;

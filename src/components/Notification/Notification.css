@@ -20,7 +20,7 @@
 }
 
 .notification-assistant {
-  background-color: #e1dcb5;
+  background-color: #95e6a7;
 }
 
 .notification-user {
@@ -115,4 +115,42 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+.no-suggestions {
+  color: #999;
+  padding: 0.5rem;
+}
+
+.suggestions {
+  border: 1px solid #999;
+  border-top-width: 0;
+  list-style: none;
+  margin-top: 0;
+  max-height: 143px;
+  overflow-y: auto;
+  padding-left: 0;
+  width: calc(500px + 1rem);
+}
+
+.suggestions li {
+  padding: 0.5rem;
+}
+
+.suggestion-active,
+.suggestions li:hover {
+  background-color: #008f68;
+  color: #f3f3f3;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.suggestions li:not(:last-of-type) {
+  border-bottom: 1px solid #999;
+}
+
+#msg {
+  border: 1px solid #999;
+  padding: 0.5rem;
+  width: 250px;
 }

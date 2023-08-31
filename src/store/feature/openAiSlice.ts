@@ -5,6 +5,12 @@ import { RootState } from "../store";
 interface Message{
     role: string;
     content: string;
+    attachments: string[]
+}
+
+interface Msg{
+    role: string;
+    content: string;
 }
 
 interface Openai{
@@ -112,6 +118,11 @@ export const setMessage = createAsyncThunk<
 
         //limit messages
         newMessages = newMessages.slice(-6);
+
+        let aiMessages:Msg[] = [];
+        newMessages.map((msg) => {
+            aiMessages.push({role: msg.role, content: msg.attachments + msg.content})
+        })
         
         try {
             const baseURL = "https://api.openai.com/v1/chat/completions";
@@ -121,7 +132,7 @@ export const setMessage = createAsyncThunk<
             model: 'gpt-3.5-turbo',
             max_tokens: 500,
             temperature: 0.0,
-            messages: newMessages
+            messages: aiMessages
                 // {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
                 // {'role': 'user', 'content': search + " : " + doc}
             // ],
@@ -131,7 +142,7 @@ export const setMessage = createAsyncThunk<
                 'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}` 
             }
             })
-            return { role: resp.data.choices[0].message.role, content: resp.data.choices[0].message.content};
+            return { role: resp.data.choices[0].message.role, content: resp.data.choices[0].message.content, attachments:[]};
         } catch (error) {
             return thunkAPI.rejectWithValue("something went wrong");
         }
@@ -174,7 +185,7 @@ export const generateCode = createAsyncThunk<
                 'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}` 
             }
             })
-            return { role: resp.data.choices[0].message.role, content: resp.data.choices[0].message.content};
+            return { role: resp.data.choices[0].message.role, content: resp.data.choices[0].message.content, attachments:[]};
         } catch (error) {
             return thunkAPI.rejectWithValue("something went wrong");
         }

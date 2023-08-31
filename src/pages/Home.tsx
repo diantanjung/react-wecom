@@ -56,10 +56,6 @@ const Home = ({ username, setUsername }: HomeProps) => {
   //     });
   // };
 
-  useEffect(() => {
-    console.log(username);
-  }, [username]);
-
   return (
     <div className="wrapper d-flex align-items-stretch">
       {/* {
