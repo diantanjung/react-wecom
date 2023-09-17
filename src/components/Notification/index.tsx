@@ -37,13 +37,13 @@ const Notification = () => {
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
-    setInputMsg("");
-    dispatch(
-      setMessage({
-        with_context: true,
-        message: { role: "user", content: inputMsg, attachments: attachment },
-      })
-    );
+    // setInputMsg("");
+    // dispatch(
+    //   setMessage({
+    //     with_context: true,
+    //     message: { role: "user", content: inputMsg, attachments: attachment },
+    //   })
+    // );
   };
 
   const handleChangeMsg = (e: ChangeEvent<HTMLInputElement>) => {
@@ -52,8 +52,6 @@ const Notification = () => {
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    console.log("input msg", inputMsg.split("@").pop());
-
     if (e.key === "@") {
       setIsTagActive(true);
       fetchFilePaths("");
@@ -70,6 +68,91 @@ const Notification = () => {
         fetchFilePaths(term);
       }
     }
+
+    if (e.ctrlKey && e.key === "Enter") {
+      handleSendMsgCodebase();
+    } else if (e.key === "Enter") {
+      handleSendMsg();
+    }
+  };
+
+  const handleSendMsg = () => {
+    setInputMsg("");
+    dispatch(
+      setMessage({
+        with_context: true,
+        message: { role: "user", content: inputMsg, attachments: attachment },
+      })
+    );
+  };
+
+  const handleSendMsgCodebase = () => {
+    if (isAuthenticated()) {
+      const username = localStorage.username || "guest";
+      const resp = axiosInstance()
+        .post(
+          "/getcodebase",
+          JSON.stringify({
+            path_str: "home/" + username,
+            username: username,
+          })
+        )
+        .then((res) => {
+          const result = res.data.map((item: any) => {
+            return (
+              "I attach file " + item.filepath + " : " + item.file_str + ". "
+            );
+          });
+          setInputMsg("");
+          dispatch(
+            setMessage({
+              with_context: true,
+              message: {
+                role: "user",
+                content: inputMsg,
+                attachments: [...attachment, result],
+              },
+            })
+          );
+        })
+        .catch(console.error);
+    } else {
+      const resp = axiosInstance()
+        .post(
+          "/ggetcodebase",
+          JSON.stringify({
+            path_str: "home/guest",
+            username: "guest",
+          })
+        )
+        .then((res) => {
+          const result = res.data.map((item: any) => {
+            return (
+              "I attach file " + item.filepath + " : " + item.file_str + ". "
+            );
+          });
+          setInputMsg("");
+          dispatch(
+            setMessage({
+              with_context: true,
+              message: {
+                role: "user",
+                content: inputMsg,
+                attachments: [...attachment, result],
+              },
+            })
+          );
+        })
+        .catch(console.error);
+    }
+  };
+
+  const handleClickChat = () => {
+    handleSendMsg();
+  };
+
+  const handleClickChatCodebase = () => {
+    handleSendMsgCodebase();
   };
 
   const fetchFilePaths = (term: string) => {
@@ -117,7 +200,16 @@ const Notification = () => {
           })
         )
         .then((res) => {
-          console.log("open file suggestion-1", res.data);
+          setAttachment((prev: string[]) => {
+            return [
+              ...prev,
+              "I attach file " +
+                res.data.filepath +
+                " : " +
+                res.data.file_str +
+                ". ",
+            ];
+          });
         })
         .catch(console.error);
     } else {
@@ -130,10 +222,64 @@ const Notification = () => {
           })
         )
         .then((res) => {
-          console.log("open file suggestion-2", res.data);
-          setAttachment((prev: string[]) =>{
-            return [...prev, "I attach file " + res.data.filepath + " : " + res.data.file_str + ". "];
+          setAttachment((prev: string[]) => {
+            return [
+              ...prev,
+              "I attach file " +
+                res.data.filepath +
+                " : " +
+                res.data.file_str +
+                ". ",
+            ];
+          });
+        })
+        .catch(console.error);
+    }
+  };
+
+  const getCodebase = () => {
+    if (isAuthenticated()) {
+      const username = localStorage.username || "guest";
+      const resp = axiosInstance()
+        .post(
+          "/getcodebase",
+          JSON.stringify({
+            path_str: "home/" + username,
+            username: username,
           })
+        )
+        .then((res) => {
+          setAttachment((prev: string[]) => {
+            const result = res.data.map((item: any) => {
+              return (
+                "I attach file " + item.filepath + " : " + item.file_str + ". "
+              );
+            });
+            return [...prev, result];
+          });
+          handleSendMsg();
+        })
+        .catch(console.error);
+    } else {
+      const resp = axiosInstance()
+        .post(
+          "/ggetcodebase",
+          JSON.stringify({
+            path_str: "home/guest",
+            username: "guest",
+          })
+        )
+        .then((res) => {
+          console.log("get codebase-2", res.data);
+          setAttachment((prev: string[]) => {
+            const result = res.data.map((item: any) => {
+              return (
+                "I attach file " + item.filepath + " : " + item.file_str + ". "
+              );
+            });
+            return [...prev, result];
+          });
+          handleSendMsg();
         })
         .catch(console.error);
     }
@@ -149,8 +295,7 @@ const Notification = () => {
     });
 
     setIsTagActive(false);
-    if(filepath)
-      getTextFromPath(filepath);
+    if (filepath) getTextFromPath(filepath);
   };
 
   return (
@@ -209,8 +354,17 @@ const Notification = () => {
               onKeyDown={handleKeyDown}
             />
             <div className="input-group-append">
-              <button className="btn btn-success" type="submit">
+              <button
+                className="btn btn-sm btn-success"
+                onClick={handleClickChat}
+              >
                 Send
+              </button>
+              <button
+                className="btn btn-sm btn-info"
+                onClick={handleClickChatCodebase}
+              >
+                with Codebase
               </button>
             </div>
             {isTagActive && (
