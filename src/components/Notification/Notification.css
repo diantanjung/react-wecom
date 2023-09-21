@@ -154,3 +154,9 @@
   padding: 0.5rem;
   width: 250px;
 }
+
+.attachment{
+  line-height: 1.1 !important;
+  font-size: 90% !important;
+  margin-right: 3px;
+}

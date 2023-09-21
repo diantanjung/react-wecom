@@ -17,6 +17,7 @@ import {
 import debounce from "lodash/debounce";
 import axiosInstance from "../../helpers/axiosInstance";
 import isAuthenticated from "../../utils/isAuthenticated";
+import { addFileItem } from "../../store/feature/filetabSlice";
 
 interface iGetAllFiles {
   filename: string;
@@ -26,12 +27,17 @@ interface iGetAllFiles {
   mod_time: string;
 }
 
+interface iAttachment {
+  message: string;
+  filepath: string
+}
+
 const Notification = () => {
   const { messages, isChatLoading } = useAppSelector((store) => store.openai);
   const dispatch = useAppDispatch();
 
   const [inputMsg, setInputMsg] = useState("");
-  const [attachment, setAttachment] = useState<Array<string>>([]);
+  const [attachment, setAttachment] = useState<Array<iAttachment>>([]);
   const [isTagActive, setIsTagActive] = useState(false);
   const [filepaths, setFilepaths] = useState<Array<iGetAllFiles>>([]);
 
@@ -200,14 +206,14 @@ const Notification = () => {
           })
         )
         .then((res) => {
-          setAttachment((prev: string[]) => {
+          setAttachment((prev: iAttachment[]) => {
+            const result = {filepath:res.data.filepath, message: "I attach file " +
+            res.data.filepath +
+            " : " +
+            res.data.file_str +
+            ". "}
             return [
-              ...prev,
-              "I attach file " +
-                res.data.filepath +
-                " : " +
-                res.data.file_str +
-                ". ",
+              ...prev,result
             ];
           });
         })
@@ -222,14 +228,14 @@ const Notification = () => {
           })
         )
         .then((res) => {
-          setAttachment((prev: string[]) => {
+          setAttachment((prev: iAttachment[]) => {
+            const result = {filepath:res.data.filepath, message: "I attach file " +
+            res.data.filepath +
+            " : " +
+            res.data.file_str +
+            ". "}
             return [
-              ...prev,
-              "I attach file " +
-                res.data.filepath +
-                " : " +
-                res.data.file_str +
-                ". ",
+              ...prev,result
             ];
           });
         })
@@ -249,14 +255,16 @@ const Notification = () => {
           })
         )
         .then((res) => {
-          setAttachment((prev: string[]) => {
-            const result = res.data.map((item: any) => {
-              return (
-                "I attach file " + item.filepath + " : " + item.file_str + ". "
-              );
+            setAttachment((prev: iAttachment[]) => {
+              const result = {filepath:res.data.filepath, message: "I attach file " +
+              res.data.filepath +
+              " : " +
+              res.data.file_str +
+              ". "}
+              return [
+                ...prev,result
+              ];
             });
-            return [...prev, result];
-          });
           handleSendMsg();
         })
         .catch(console.error);
@@ -271,13 +279,15 @@ const Notification = () => {
         )
         .then((res) => {
           console.log("get codebase-2", res.data);
-          setAttachment((prev: string[]) => {
-            const result = res.data.map((item: any) => {
-              return (
-                "I attach file " + item.filepath + " : " + item.file_str + ". "
-              );
-            });
-            return [...prev, result];
+          setAttachment((prev: iAttachment[]) => {
+            const result = {filepath:res.data.filepath, message: "I attach file " +
+            res.data.filepath +
+            " : " +
+            res.data.file_str +
+            ". "}
+            return [
+              ...prev,result
+            ];
           });
           handleSendMsg();
         })
@@ -340,6 +350,11 @@ const Notification = () => {
       ))}
 
       <div className="notification-row">
+        {attachment.map((item, key) => (
+          <a href="#" key={key} onClick={() => dispatch(addFileItem(item.filepath))}>
+            <span className="badge badge-secondary attachment">{item.filepath}</span>
+          </a>
+        ))}
         {isChatLoading && <div className="loader"></div>}
         <form onSubmit={handleSubmit}>
           <div className="input-group mb-3">

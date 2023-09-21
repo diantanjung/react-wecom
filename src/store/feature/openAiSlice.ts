@@ -2,10 +2,15 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { RootState } from "../store";
 
+interface Attachment {
+    message: string;
+    filepath: string
+  }
+
 interface Message{
     role: string;
     content: string;
-    attachments: string[]
+    attachments: Attachment[]
 }
 
 interface Msg{
