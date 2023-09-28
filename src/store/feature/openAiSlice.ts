@@ -5,20 +5,21 @@ import { RootState } from "../store";
 interface Attachment {
     message: string;
     filepath: string
-  }
-
-interface Message{
-    role: string;
-    content: string;
-    attachments: Attachment[]
 }
 
-interface Msg{
+interface Message {
+    role: string;
+    content: string;
+    attachments: Attachment[];
+    // codebase: Attachment[];
+}
+
+interface Msg {
     role: string;
     content: string;
 }
 
-interface Openai{
+interface Openai {
     finalCode: string
     startPos: number
     endPos: number
@@ -26,11 +27,14 @@ interface Openai{
     acceptCode: string
 
     notifStatus: boolean
-    messages:Message[]
+    messages: Message[]
 
     codeMessages: Message[]
 
     isChatLoading: boolean
+
+    // curTag: Attachment[]
+
 }
 
 const initialState = {
@@ -105,49 +109,53 @@ interface MessageInput {
     with_context: boolean
     message: Message
 }
-  
+
 export const setMessage = createAsyncThunk<
     Message,
     MessageInput,
-    {state: RootState}
-    >(
+    { state: RootState }
+>(
     "openai/setMessage",
     async (params, thunkAPI) => {
         let newMessages;
-        if (params.with_context){
+        if (params.with_context) {
             const { messages } = thunkAPI.getState().openai;
             newMessages = [...messages, params.message]
-        }else{
+        } else {
             newMessages = [params.message]
         }
 
         //limit messages
         newMessages = newMessages.slice(-6);
 
-        let aiMessages:Msg[] = [];
+        let aiMessages: Msg[] = [];
         newMessages.map((msg) => {
-            aiMessages.push({role: msg.role, content: msg.attachments + msg.content})
+            let concatMessage = msg.attachments.map((atc) => {
+                return `${atc.message}`;
+            }).join(', ');
+
+            aiMessages.push({ role: msg.role, content: concatMessage + msg.content })
         })
-        
+
         try {
             const baseURL = "https://api.openai.com/v1/chat/completions";
 
             const resp = await axios
-            .post(baseURL, {
-            model: 'gpt-3.5-turbo',
-            max_tokens: 500,
-            temperature: 0.0,
-            messages: aiMessages
-                // {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
-                // {'role': 'user', 'content': search + " : " + doc}
-            // ],
-            }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}` 
-            }
-            })
-            return { role: resp.data.choices[0].message.role, content: resp.data.choices[0].message.content, attachments:[]};
+                .post(baseURL, {
+                    model: 'gpt-3.5-turbo',
+                    max_tokens: 500,
+                    temperature: 0.0,
+                    messages: aiMessages
+                    // {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
+                    // {'role': 'user', 'content': search + " : " + doc}
+                    // ],
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`
+                    }
+                })
+            return { role: resp.data.choices[0].message.role, content: resp.data.choices[0].message.content, attachments: [] };
         } catch (error) {
             return thunkAPI.rejectWithValue("something went wrong");
         }
@@ -157,40 +165,40 @@ export const setMessage = createAsyncThunk<
 export const generateCode = createAsyncThunk<
     Message,
     MessageInput,
-    {state: RootState}
-    >(
+    { state: RootState }
+>(
     "openai/generateCode",
     async (params, thunkAPI) => {
         let newMessages;
-        if (params.with_context){
+        if (params.with_context) {
             const { codeMessages } = thunkAPI.getState().openai;
             newMessages = [...codeMessages, params.message]
-        }else{
+        } else {
             newMessages = [params.message]
         }
 
         //limit messages
         newMessages = newMessages.slice(-4);
-        
+
         try {
             const baseURL = "https://api.openai.com/v1/chat/completions";
 
             const resp = await axios
-            .post(baseURL, {
-            model: 'gpt-3.5-turbo',
-            max_tokens: 500,
-            temperature: 0.0,
-            messages: newMessages
-                // {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
-                // {'role': 'user', 'content': search + " : " + doc}
-            // ],
-            }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}` 
-            }
-            })
-            return { role: resp.data.choices[0].message.role, content: resp.data.choices[0].message.content, attachments:[]};
+                .post(baseURL, {
+                    model: 'gpt-3.5-turbo',
+                    max_tokens: 500,
+                    temperature: 0.0,
+                    messages: newMessages
+                    // {'role': 'user', 'content': "Answer in Source Code. " + search + " : " + doc}
+                    // {'role': 'user', 'content': search + " : " + doc}
+                    // ],
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`
+                    }
+                })
+            return { role: resp.data.choices[0].message.role, content: resp.data.choices[0].message.content, attachments: [] };
         } catch (error) {
             return thunkAPI.rejectWithValue("something went wrong");
         }
@@ -200,6 +208,6 @@ export const generateCode = createAsyncThunk<
 
 export const {
     setFinalCodeCancel, setFinalCodeAccept, setResponseOpenAi, setNotifStatus
-  } = openAiSlice.actions;
-  
-  export default openAiSlice.reducer;
+} = openAiSlice.actions;
+
+export default openAiSlice.reducer;

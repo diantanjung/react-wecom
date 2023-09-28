@@ -18,6 +18,7 @@ import debounce from "lodash/debounce";
 import axiosInstance from "../../helpers/axiosInstance";
 import isAuthenticated from "../../utils/isAuthenticated";
 import { addFileItem } from "../../store/feature/filetabSlice";
+import { log } from "console";
 
 interface iGetAllFiles {
   filename: string;
@@ -29,7 +30,7 @@ interface iGetAllFiles {
 
 interface iAttachment {
   message: string;
-  filepath: string
+  filepath: string;
 }
 
 const Notification = () => {
@@ -40,17 +41,6 @@ const Notification = () => {
   const [attachment, setAttachment] = useState<Array<iAttachment>>([]);
   const [isTagActive, setIsTagActive] = useState(false);
   const [filepaths, setFilepaths] = useState<Array<iGetAllFiles>>([]);
-
-  const handleSubmit = (e: SyntheticEvent) => {
-    e.preventDefault();
-    // setInputMsg("");
-    // dispatch(
-    //   setMessage({
-    //     with_context: true,
-    //     message: { role: "user", content: inputMsg, attachments: attachment },
-    //   })
-    // );
-  };
 
   const handleChangeMsg = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -76,13 +66,16 @@ const Notification = () => {
     }
 
     if (e.ctrlKey && e.key === "Enter") {
+      console.log("Test if CTLR Enter");
       handleSendMsgCodebase();
     } else if (e.key === "Enter") {
+      console.log("Test Enter sahaja");
       handleSendMsg();
     }
   };
 
   const handleSendMsg = () => {
+    console.log("attachment", attachment);
     setInputMsg("");
     dispatch(
       setMessage({
@@ -90,6 +83,7 @@ const Notification = () => {
         message: { role: "user", content: inputMsg, attachments: attachment },
       })
     );
+    setAttachment([]);
   };
 
   const handleSendMsgCodebase = () => {
@@ -105,18 +99,21 @@ const Notification = () => {
         )
         .then((res) => {
           const result = res.data.map((item: any) => {
-            return (
-              "I attach file " + item.filepath + " : " + item.file_str + ". "
-            );
+            return {
+              filepath: item.filepath,
+              message:
+                "I attach file " + item.filepath + " : " + item.file_str + ". ",
+            };
           });
+
           setInputMsg("");
           dispatch(
             setMessage({
-              with_context: true,
+              with_context: false,
               message: {
                 role: "user",
                 content: inputMsg,
-                attachments: [...attachment, result],
+                attachments: [...attachment, ...result],
               },
             })
           );
@@ -133,24 +130,27 @@ const Notification = () => {
         )
         .then((res) => {
           const result = res.data.map((item: any) => {
-            return (
-              "I attach file " + item.filepath + " : " + item.file_str + ". "
-            );
+            return {
+              filepath: item.filepath,
+              message:
+                "I attach file " + item.filepath + " : " + item.file_str + ". ",
+            };
           });
           setInputMsg("");
           dispatch(
             setMessage({
-              with_context: true,
+              with_context: false,
               message: {
                 role: "user",
                 content: inputMsg,
-                attachments: [...attachment, result],
+                attachments: [...attachment, ...result],
               },
             })
           );
         })
         .catch(console.error);
     }
+    setAttachment([]);
   };
 
   const handleClickChat = () => {
@@ -207,14 +207,16 @@ const Notification = () => {
         )
         .then((res) => {
           setAttachment((prev: iAttachment[]) => {
-            const result = {filepath:res.data.filepath, message: "I attach file " +
-            res.data.filepath +
-            " : " +
-            res.data.file_str +
-            ". "}
-            return [
-              ...prev,result
-            ];
+            const result = {
+              filepath: res.data.filepath,
+              message:
+                "I attach file " +
+                res.data.filepath +
+                " : " +
+                res.data.file_str +
+                ". ",
+            };
+            return [...prev, result];
           });
         })
         .catch(console.error);
@@ -229,67 +231,17 @@ const Notification = () => {
         )
         .then((res) => {
           setAttachment((prev: iAttachment[]) => {
-            const result = {filepath:res.data.filepath, message: "I attach file " +
-            res.data.filepath +
-            " : " +
-            res.data.file_str +
-            ". "}
-            return [
-              ...prev,result
-            ];
+            const result = {
+              filepath: res.data.filepath,
+              message:
+                "I attach file " +
+                res.data.filepath +
+                " : " +
+                res.data.file_str +
+                ". ",
+            };
+            return [...prev, result];
           });
-        })
-        .catch(console.error);
-    }
-  };
-
-  const getCodebase = () => {
-    if (isAuthenticated()) {
-      const username = localStorage.username || "guest";
-      const resp = axiosInstance()
-        .post(
-          "/getcodebase",
-          JSON.stringify({
-            path_str: "home/" + username,
-            username: username,
-          })
-        )
-        .then((res) => {
-            setAttachment((prev: iAttachment[]) => {
-              const result = {filepath:res.data.filepath, message: "I attach file " +
-              res.data.filepath +
-              " : " +
-              res.data.file_str +
-              ". "}
-              return [
-                ...prev,result
-              ];
-            });
-          handleSendMsg();
-        })
-        .catch(console.error);
-    } else {
-      const resp = axiosInstance()
-        .post(
-          "/ggetcodebase",
-          JSON.stringify({
-            path_str: "home/guest",
-            username: "guest",
-          })
-        )
-        .then((res) => {
-          console.log("get codebase-2", res.data);
-          setAttachment((prev: iAttachment[]) => {
-            const result = {filepath:res.data.filepath, message: "I attach file " +
-            res.data.filepath +
-            " : " +
-            res.data.file_str +
-            ". "}
-            return [
-              ...prev,result
-            ];
-          });
-          handleSendMsg();
         })
         .catch(console.error);
     }
@@ -322,6 +274,21 @@ const Notification = () => {
           {message.role === "user" ? (
             <div className="notification-user">
               <p>{message.content}</p>
+              {message.attachments.length > 0 && (
+                <div className="file-context">
+                  {message.attachments.map((item, key) => (
+                    <a
+                      href="#"
+                      key={key}
+                      onClick={() => dispatch(addFileItem(item.filepath))}
+                    >
+                      <span className="badge badge-secondary attachment">
+                        {item.filepath}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="notification-assistant">
@@ -351,54 +318,54 @@ const Notification = () => {
 
       <div className="notification-row">
         {attachment.map((item, key) => (
-          <a href="#" key={key} onClick={() => dispatch(addFileItem(item.filepath))}>
-            <span className="badge badge-secondary attachment">{item.filepath}</span>
+          <a
+            href="#"
+            key={key}
+            onClick={() => dispatch(addFileItem(item.filepath))}
+          >
+            <span className="badge badge-secondary attachment">
+              {item.filepath}
+            </span>
           </a>
         ))}
         {isChatLoading && <div className="loader"></div>}
-        <form onSubmit={handleSubmit}>
-          <div className="input-group mb-3">
-            <input
-              id="msg"
-              type="text"
-              className="form-control"
-              placeholder="Send a message"
-              list="filepaths"
-              value={inputMsg}
-              onChange={handleChangeMsg}
-              onKeyDown={handleKeyDown}
-            />
-            <div className="input-group-append">
-              <button
-                className="btn btn-sm btn-success"
-                onClick={handleClickChat}
-              >
-                Send
-              </button>
-              <button
-                className="btn btn-sm btn-info"
-                onClick={handleClickChatCodebase}
-              >
-                with Codebase
-              </button>
-            </div>
-            {isTagActive && (
-              <ul className="suggestions">
-                {filepaths.map((filepath, idx) => (
-                  <li key={idx}>
-                    <a
-                      onClick={handleClickSuggestion}
-                      data-filename={filepath.filename}
-                      data-path={filepath.path}
-                    >
-                      <b>{filepath.filename}</b> {filepath.path}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
+        <div className="input-group mb-3">
+          <input
+            id="msg"
+            type="text"
+            className="form-control"
+            placeholder="Send a message"
+            list="filepaths"
+            value={inputMsg}
+            onChange={handleChangeMsg}
+            onKeyDown={handleKeyDown}
+          />
+          <div className="input-group-append">
+            <button
+              className="btn btn-sm btn-success"
+              onClick={handleClickChat}
+            >
+              Send
+            </button>
+            <button
+              className="btn btn-sm btn-info"
+              onClick={handleClickChatCodebase}
+            >
+              with Codebase
+            </button>
           </div>
-        </form>
+          {isTagActive && (
+            <ul className="suggestions">
+              {filepaths.map((filepath, idx) => (
+                <li key={idx}>
+                  <a onClick={handleClickSuggestion}>
+                    <b>{filepath.filename}</b> {filepath.path}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
